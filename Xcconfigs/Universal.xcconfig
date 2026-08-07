@@ -6,8 +6,15 @@
 //
 //
 
-ARCHS = $(ARCHS_STANDARD_32_64_BIT)
-ARCHS[sdk=macosx10.14] = $(ARCHS_STANDARD)
-MACOSX_DEPLOYMENT_TARGET = 10.7
+// ARCHS_STANDARD_32_64_BIT still resolves to a list containing i386, which
+// current Xcode rejects outright rather than warning about. ARCHS_STANDARD is
+// arm64 + x86_64.
+ARCHS = $(ARCHS_STANDARD)
+
+// 11.0 is the floor imposed by the SwiftAdditions dependency, which declares
+// .macOS(.v11) in its Package.swift and builds its frameworks with minos 11.0.
+// Anything lower fails in PlayerPROKit with "compiling for macOS <x>, but
+// module 'SwiftAdditions' has a minimum deployment target of macOS 11.0".
+MACOSX_DEPLOYMENT_TARGET = 11.0
 CLANG_ENABLE_OBJC_ARC[arch=i386] = NO
 CLANG_ENABLE_OBJC_ARC[arch=ppc] = NO
