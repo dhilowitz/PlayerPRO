@@ -275,12 +275,27 @@ static void AnalyseSignatureMOD(size_t EOFo, MADFourChar temp, short *maxInstru,
 				}
 			}
 			
+			{
+				// Rebase onto the 15-instrument layout: 16 fewer instrument
+				// records of 30 bytes each puts numPointers at 470 rather
+				// than 950.
+				const MODDef *MODInt = (const MODDef*) ((uintptr_t)aMOD - 0x1E0);
+
+				// A Soundtracker MOD carries no signature, so this branch is
+				// pure guesswork and has to reject anything implausible or it
+				// claims files belonging to other plug-ins. Every real module
+				// plays at least one position and the format stops at 128, so
+				// a song length outside that range is not a MOD.
+				if (MODInt->numPointers < 1 || MODInt->numPointers > 128)
+					result = false;
+			}
+
 			if (EOFo != -1) {
 				int		PatMax = 0;
 				MODDef	*MODInt;
-				
+
 				MODInt = (MODDef*) ((uintptr_t)aMOD - 0x1E0);
-				
+
 				for(i = 0; i < 128; i++) {
 					if (MODInt->oPointers[i] < 0)
 						MODInt->oPointers[i] = 0;
