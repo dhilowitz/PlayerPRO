@@ -53,12 +53,8 @@ final class DigitalPlugInObject : PPPlugInObject {
 		super.init(bundle: toInit)
 	}
 	
-	override var hashValue: Int {
-		return menuName.hashValue
-	}
-	
 	override var hash: Int {
-		return self.hashValue
+		return menuName.hashValue
 	}
 
 	override func isEqual(_ object: Any?) -> Bool {

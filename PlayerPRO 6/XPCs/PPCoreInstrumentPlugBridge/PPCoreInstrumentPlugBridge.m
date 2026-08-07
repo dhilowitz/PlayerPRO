@@ -15,7 +15,9 @@
 
 static int nativeCPUArch()
 {
-#if __x86_64__
+#if __arm64__
+	return NSBundleExecutableArchitectureARM64;
+#elif __x86_64__
 	return NSBundleExecutableArchitectureX86_64;
 #elif __i386__
 	return NSBundleExecutableArchitectureI386;

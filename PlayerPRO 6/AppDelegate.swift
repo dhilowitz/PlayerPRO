@@ -10,13 +10,14 @@ import Cocoa
 import PlayerPROCore
 import PlayerPROKit
 import SwiftAdditions
+import FoundationAdditions
 
 @inline(__always) private func makeNSRGB(_ red: UInt16, _ green: UInt16, _ blue:UInt16) -> NSColor {
 	return NSColor(calibratedRed: CGFloat(red) / CGFloat(UInt16.max), green: CGFloat(green) / CGFloat(UInt16.max), blue: CGFloat(blue) / CGFloat(UInt16.max), alpha: 1)
 }
 
 private func CocoaDebugStr(_ line: Int16, file: UnsafePointer<Int8>?, text: UnsafePointer<Int8>?) {
-	let swiftFile = FileManager.default.string(withFileSystemRepresentation: file!, length: Int(strlen(file)))
+	let swiftFile = FileManager.default.string(withFileSystemRepresentation: file!, length: Int(strlen(file!)))
 	let swiftText = String(cString: text!)
 	print("\(swiftFile):\(line), error text: \(swiftText)")
 	let errStr = NSLocalizedString("MyDebugStr_Error", comment: "Error")
