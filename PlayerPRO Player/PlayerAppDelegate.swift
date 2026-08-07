@@ -18,7 +18,7 @@ private let kUnresolvableFile = "Unresolvable files"
 private let kUnresolvableFileDescription = "There were %lu file(s) that were unable to be resolved."
 
 private func cocoaDebugStr(line: Int16, file: UnsafePointer<Int8>?, text: UnsafePointer<Int8>?) {
-	let swiftFile = FileManager.default.string(withFileSystemRepresentation: file!, length: Int(strlen(file)))
+	let swiftFile = FileManager.default.string(withFileSystemRepresentation: file!, length: Int(strlen(file!)))
 	let swiftText = String(validatingUTF8: text!)!
 	print("\(swiftFile):\(line), error text: \(swiftText)")
 	let errStr = NSLocalizedString("MyDebugStr_Error", comment: "Error")
