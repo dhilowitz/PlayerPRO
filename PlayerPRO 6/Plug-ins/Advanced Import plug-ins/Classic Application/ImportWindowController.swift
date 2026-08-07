@@ -155,3 +155,9 @@ class ImportWindowController: NSWindowController {
 		dictionaryCont?.removeObserver(self, forKeyPath: "selectionIndexes")
 	}
 }
+
+// Local shim: SwiftAdditions removed OSType's ExpressibleByStringLiteral conformance,
+// which this file relied on for `switch osType { case "MADK": ... }`.
+private func ~= (pattern: String, value: OSType) -> Bool {
+	return OSType(osTypeStringValue: pattern) == value
+}

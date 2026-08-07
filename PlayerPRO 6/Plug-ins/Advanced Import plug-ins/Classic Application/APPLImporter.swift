@@ -65,3 +65,9 @@ final public class APPLImporter: NSObject, PPComplexImportPlugInterface {
 		throw PPMADError(.fileNotSupportedByThisPlug)
 	}
 }
+
+// Local shim: SwiftAdditions removed OSType's ExpressibleByStringLiteral conformance,
+// which this file relied on for `switch osType { case "MADK": ... }`.
+private func ~= (pattern: String, value: OSType) -> Bool {
+	return OSType(osTypeStringValue: pattern) == value
+}
