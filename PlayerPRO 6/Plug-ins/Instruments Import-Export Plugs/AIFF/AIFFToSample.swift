@@ -11,6 +11,7 @@ import AudioToolbox
 import PlayerPROCore
 import PlayerPROKit
 import SwiftAdditions
+import FoundationAdditions
 import SwiftAudioAdditions
 
 private let kSrcBufSize: UInt32 = 32768;
