@@ -355,11 +355,15 @@
 		556BC40D1FAFEE090015C622 /* Old Classic Sound.plugin in Copy PlugIns */ = {isa = PBXBuildFile; fileRef = 556BC4011FAFEB9E0015C622 /* Old Classic Sound.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		556DC1C619A27A5C00928BB4 /* PlayerPROCoreAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55E382EE198169C000EC330B /* PlayerPROCoreAdditions.swift */; };
 		557003361B2261B300C623AB /* SwiftAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9741B01496100EB2C84 /* SwiftAdditions.framework */; };
+		55FA00012DA0000100000001 /* FoundationAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55647E8D2CFED86D000945EE /* FoundationAdditions.framework */; };
 		557003371B2261B300C623AB /* SwiftAdditions.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9741B01496100EB2C84 /* SwiftAdditions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		55FA00022DA0000100000002 /* FoundationAdditions.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 55647E8D2CFED86D000945EE /* FoundationAdditions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5570033A1B2261B400C623AB /* SwiftAudioAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9801B01496100EB2C84 /* SwiftAudioAdditions.framework */; };
 		5570033B1B2261B400C623AB /* SwiftAudioAdditions.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9801B01496100EB2C84 /* SwiftAudioAdditions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5570033E1B2261C300C623AB /* SwiftAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9741B01496100EB2C84 /* SwiftAdditions.framework */; };
+		55FA00032DA0000100000003 /* FoundationAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55647E8D2CFED86D000945EE /* FoundationAdditions.framework */; };
 		5570033F1B2261C300C623AB /* SwiftAdditions.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9741B01496100EB2C84 /* SwiftAdditions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		55FA00042DA0000100000004 /* FoundationAdditions.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 55647E8D2CFED86D000945EE /* FoundationAdditions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		557003421B2261C400C623AB /* SwiftAudioAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9801B01496100EB2C84 /* SwiftAudioAdditions.framework */; };
 		557003431B2261C400C623AB /* SwiftAudioAdditions.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9801B01496100EB2C84 /* SwiftAudioAdditions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		557003461B2261DA00C623AB /* SwiftAdditions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55D5E9741B01496100EB2C84 /* SwiftAdditions.framework */; };
@@ -2227,6 +2231,7 @@
 			files = (
 				55379CB01D63E36D00387CF3 /* ResourceFork.framework in Copy Frameworks */,
 				5570033F1B2261C300C623AB /* SwiftAdditions.framework in Copy Frameworks */,
+				55FA00042DA0000100000004 /* FoundationAdditions.framework in Copy Frameworks */,
 				5573A1621658A3E700A5AECA /* PlayerPROCore.framework in Copy Frameworks */,
 				5593A14B1DAC05090040CACA /* MASPreferences.framework in Copy Frameworks */,
 				5578C4F917DAB28A0057D11B /* PlayerPROKit.framework in Copy Frameworks */,
@@ -2242,6 +2247,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				557003371B2261B300C623AB /* SwiftAdditions.framework in Copy Frameworks */,
+				55FA00022DA0000100000002 /* FoundationAdditions.framework in Copy Frameworks */,
 				5578C49E17D9E8A00057D11B /* PlayerPROCore.framework in Copy Frameworks */,
 				5593A14F1DAC05150040CACA /* MASPreferences.framework in Copy Frameworks */,
 				5578C4FD17DB8A3B0057D11B /* PlayerPROKit.framework in Copy Frameworks */,
@@ -3275,6 +3281,7 @@
 				5578C48217D9E8560057D11B /* Cocoa.framework in Frameworks */,
 				5593A14E1DAC05150040CACA /* MASPreferences.framework in Frameworks */,
 				557003361B2261B300C623AB /* SwiftAdditions.framework in Frameworks */,
+				55FA00012DA0000100000001 /* FoundationAdditions.framework in Frameworks */,
 				5578C49D17D9E89B0057D11B /* PlayerPROCore.framework in Frameworks */,
 				55149C621832D176009C850B /* AVFoundation.framework in Frameworks */,
 				5578C4FC17DB8A2F0057D11B /* PlayerPROKit.framework in Frameworks */,
@@ -3601,6 +3608,7 @@
 			files = (
 				557003421B2261C400C623AB /* SwiftAudioAdditions.framework in Frameworks */,
 				5570033E1B2261C300C623AB /* SwiftAdditions.framework in Frameworks */,
+				55FA00032DA0000100000003 /* FoundationAdditions.framework in Frameworks */,
 				55CBFC3911EB786B0028C6BB /* CoreFoundation.framework in Frameworks */,
 				557F296918790DF2009D4BC8 /* AudioToolbox.framework in Frameworks */,
 				55085D811836EC82004A152F /* CoreMIDI.framework in Frameworks */,
