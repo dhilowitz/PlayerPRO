@@ -9,6 +9,7 @@
 import Foundation
 import PlayerPROCore
 import SwiftAdditions
+import FoundationAdditions
 
 extension PPMADError {
 	public init(madErr: MADErr, userInfo: [String: Any] = [:]) {

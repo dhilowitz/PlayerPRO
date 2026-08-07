@@ -9,6 +9,7 @@
 import Foundation
 import PlayerPROCore
 import SwiftAdditions
+import FoundationAdditions
 #if !os(OSX)
 	import MobileCoreServices
 #endif

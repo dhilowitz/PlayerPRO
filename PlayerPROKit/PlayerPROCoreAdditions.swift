@@ -10,6 +10,7 @@ import CoreFoundation
 import Foundation
 import PlayerPROCore.PlugIns
 import SwiftAdditions
+import FoundationAdditions
 
 public func ==(lhs: Cmd, rhs: Cmd) -> Bool {
 	// Don't worry about the "unused" variable for now
