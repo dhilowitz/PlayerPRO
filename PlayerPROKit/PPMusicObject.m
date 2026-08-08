@@ -222,6 +222,7 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 @interface PPMusicObject ()
 {
 	NSMutableArray<PPInstrumentObject*>	*_instruments;
+	NSMutableArray<PPPatternObject*>	*_patterns;
 }
 @property (readwrite, strong, nonatomic) NSMutableArray *patterns;
 @property (readwrite, strong, nonatomic) NSMutableArray *buses;
@@ -386,6 +387,27 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 {
 	//TODO: write back to struct
 	_instruments = [instruments mutableCopy];
+}
+
+- (NSMutableArray<PPPatternObject*> *)patterns
+{
+	// Built on first use, the same way -instruments is. The only other code
+	// that filled this array lives in -setUpObjCStructures, which is compiled
+	// out, so without this the array stayed empty for every loaded music and
+	// callers saw a document with no patterns at all.
+	if (!_patterns) {
+		short patternCount = currentMusic ? currentMusic->header->numPat : 0;
+		NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:patternCount];
+		for (short i = 0; i < patternCount; i++) {
+			PPPatternObject *pat = [[PPPatternObject alloc] initWithMusic:self patternAtIndex:i];
+			if (pat) {
+				[array addObject:pat];
+			}
+		}
+		_patterns = array;
+	}
+
+	return _patterns;
 }
 
 + (MADErr)info:(MADInfoRec*)theInfo fromTrackerAtURL:(NSURL*)thURL usingLibrary:(PPLibrary*)theLib
