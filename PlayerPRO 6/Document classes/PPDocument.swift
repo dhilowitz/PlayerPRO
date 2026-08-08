@@ -90,6 +90,22 @@ import AudioToolbox
 		addWindowController(instrumentList)
 		instrumentList.currentDocument = self
 		mainViewController = docWinCon
+
+		// InsPanel.xib and PPDocument.xib place their windows almost exactly on
+		// top of each other (63pt apart), so the instrument panel opens hiding
+		// most of the document window on every launch. Anchor it to the right
+		// of the document window instead, falling back to a small offset if
+		// there is no room on screen.
+		if let docWindow = docWinCon.window, let insWindow = instrumentList.window {
+			let gap: CGFloat = 12
+			var origin = NSPoint(x: docWindow.frame.maxX + gap,
+								  y: docWindow.frame.maxY - insWindow.frame.height)
+			if let screen = docWindow.screen ?? NSScreen.main,
+			   origin.x + insWindow.frame.width > screen.visibleFrame.maxX {
+				origin = NSPoint(x: docWindow.frame.minX + 24, y: docWindow.frame.minY - 24)
+			}
+			insWindow.setFrameOrigin(origin)
+		}
 	}
 
 	private func resetPlayerPRODriver() {
