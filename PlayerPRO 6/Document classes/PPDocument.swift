@@ -221,6 +221,20 @@ import AudioToolbox
         // Add any code here that needs to be executed once the windowController has loaded the document's window.
     }
 
+	override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
+		savePanel.directoryURL = PPLastDirectory.url(for: "documentSave")
+		return true
+	}
+
+	override func save(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType, completionHandler: @escaping (Error?) -> Void) {
+		super.save(to: url, ofType: typeName, for: saveOperation) { error in
+			if error == nil {
+				PPLastDirectory.remember(url, for: "documentSave")
+			}
+			completionHandler(error)
+		}
+	}
+
 	override func write(to url: URL, ofType typeName: String) throws {
 		if typeName != MADNativeUTI {
 			guard let type = globalMadLib.typeFromUTI(typeName) else {

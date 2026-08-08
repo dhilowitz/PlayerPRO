@@ -542,6 +542,7 @@
 		559EA1581C288A0700969B41 /* MADErrs_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 559EA1571C288A0700969B41 /* MADErrs_Tests.swift */; };
 		559EA1591C288A0700969B41 /* MADErrs_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 559EA1571C288A0700969B41 /* MADErrs_Tests.swift */; };
 		55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A3CD4319A6DC8B00957845 /* PPDocument.swift */; };
+		55FA20102DA0000300000010 /* PPLastDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA200F2DA000030000000F /* PPLastDirectory.swift */; };
 		55A6201818A6EFEA003B29B5 /* PreferenceNames.strings in Resources */ = {isa = PBXBuildFile; fileRef = 55A6201B18A6EFEA003B29B5 /* PreferenceNames.strings */; };
 		55A6201918A6EFEA003B29B5 /* PreferenceNames.strings in Resources */ = {isa = PBXBuildFile; fileRef = 55A6201B18A6EFEA003B29B5 /* PreferenceNames.strings */; };
 		55A9351917F28F9700493DC5 /* Shared.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55A9351817F28F9700493DC5 /* Shared.xcassets */; };
@@ -2853,6 +2854,7 @@
 		559C419B183EB4AB004A073C /* PPQuickView-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PPQuickView-Prefix.pch"; sourceTree = "<group>"; };
 		559EA1571C288A0700969B41 /* MADErrs_Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MADErrs_Tests.swift; sourceTree = "<group>"; };
 		55A3CD4319A6DC8B00957845 /* PPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PPDocument.swift; sourceTree = "<group>"; };
+		55FA200F2DA000030000000F /* PPLastDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PPLastDirectory.swift; sourceTree = "<group>"; };
 		55A6201C18A6EFEC003B29B5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/PreferenceNames.strings; sourceTree = "<group>"; };
 		55A9351817F28F9700493DC5 /* Shared.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Shared.xcassets; sourceTree = "<group>"; };
 		55ABE82B1A081546006B6AF9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -4632,6 +4634,7 @@
 			isa = PBXGroup;
 			children = (
 				55A3CD4319A6DC8B00957845 /* PPDocument.swift */,
+				55FA200F2DA000030000000F /* PPLastDirectory.swift */,
 				557EF72F168BD4B5001BF077 /* PPInstrumentImporter.h */,
 				557EF730168BD4B5001BF077 /* PPInstrumentImporter.m */,
 				55E32C2519E9B56B0041B43B /* DocumentWindowController.swift */,
@@ -8342,6 +8345,7 @@
 				5517A24519D9D4A8002D350D /* BoxViewController.swift in Sources */,
 				55FA200E2DA000030000000E /* BoxGridView.swift in Sources */,
 				55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */,
+				55FA20102DA0000300000010 /* PPLastDirectory.swift in Sources */,
 				555F5C611993327D0056AF01 /* OpenPanelViewController.swift in Sources */,
 				55852E1C18D67CCB0009BF55 /* PPSmallPianoView.m in Sources */,
 				55FEF84519844FD600D2E79C /* DigitalViewController.m in Sources */,

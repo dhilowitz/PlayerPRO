@@ -111,10 +111,12 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		}
 
 		let openPanel = NSOpenPanel()
+		openPanel.directoryURL = PPLastDirectory.url(for: "instrumentImport")
 		if let vc = OpenPanelViewController(openPanel: openPanel, instrumentDictionary:fileDict) {
 			vc.setupDefaults()
 			vc.beginOpenPanel(currentDocument.windowForSheet!, completionHandler: { (panelHandle: NSApplication.ModalResponse) -> Void in
 				if panelHandle.rawValue == NSFileHandlingPanelOKButton {
+					PPLastDirectory.remember(openPanel.url!, for: "instrumentImport")
 					do {
 						_ = try self.instrumentImporter.identifyInstrumentFile(openPanel.url!)
 						try self.importInstrument(from: openPanel.url!)
@@ -193,9 +195,11 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		savePanel.accessoryView = popup
 		savePanel.nameFieldStringValue = instrument.name
 		savePanel.allowedFileTypes = exportPlugs[0].utiTypes
+		savePanel.directoryURL = PPLastDirectory.url(for: "instrumentExport")
 
 		savePanel.beginSheetModal(for: currentDocument.windowForSheet!) { [pendingExportPlugs] result in
 			guard result == .OK, let url = savePanel.url else { return }
+			PPLastDirectory.remember(url, for: "instrumentExport")
 			self.performExport(instrument, using: pendingExportPlugs[popup.indexOfSelectedItem], to: url)
 		}
 	}
@@ -209,9 +213,11 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		savePanel.allowedFileTypes = plug.utiTypes
 		savePanel.nameFieldStringValue = instrument.name
 		savePanel.title = String(format: NSLocalizedString("Export as %@", comment: "export instrument panel title"), plug.menuName)
+		savePanel.directoryURL = PPLastDirectory.url(for: "instrumentExport")
 
 		savePanel.beginSheetModal(for: currentDocument.windowForSheet!) { result in
 			guard result == .OK, let url = savePanel.url else { return }
+			PPLastDirectory.remember(url, for: "instrumentExport")
 			self.performExport(instrument, using: plug, to: url)
 		}
 	}
