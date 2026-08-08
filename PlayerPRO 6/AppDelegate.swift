@@ -592,6 +592,7 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 	
 	@IBAction func openFile(_ sender: AnyObject?) {
 		let panel = NSOpenPanel();
+		panel.directoryURL = PPLastDirectory.url(for: "documentOpen")
 		let otherDict: [String : [String]]  = ["PCMD": [PPPCMDUTI], "Instrument List": [PPInstrumentListUTI]];
 		var samplesDict = [String: [String]]()
 		for obj in instrumentPlugHandler {
@@ -611,6 +612,7 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 			av.beginWithCompletionHandler { (retval) -> Void in
 				if retval == NSFileHandlingPanelOKButton {
 					let panelURL = panel.url!
+					PPLastDirectory.remember(panelURL, for: "documentOpen")
 					let filename = panelURL.path
 					var err: NSError? = nil
 					let utiFile: String?

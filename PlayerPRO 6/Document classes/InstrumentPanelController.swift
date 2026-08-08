@@ -78,7 +78,17 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 				// entirely), but pattern playback through the transport
 				// can't find it until the document is closed and reopened,
 				// which forces a fresh attach.
-				try? self.theDriver.reattachCurrentMusic()
+				// Logged either way, not just on failure: this was
+				// previously swallowed silently via try?, and if pattern
+				// playback still can't find a sample imported live even
+				// with this succeeding, the reattach isn't the actual
+				// fix and the real cause is still somewhere else.
+				do {
+					try self.theDriver.reattachCurrentMusic()
+					NSLog("PPInstrumentPanelController: reattachCurrentMusic succeeded after importing sample into instrument %ld", targetInstrument.number)
+				} catch {
+					NSLog("PPInstrumentPanelController: reattachCurrentMusic FAILED after importing sample into instrument %ld: %@", targetInstrument.number, error as NSError)
+				}
 				self.instrumentOutline.reloadData()
 				self.instrumentOutline.expandItem(targetInstrument)
 				self.outlineViewSelectionDidChange(Notification(name: NSOutlineView.selectionDidChangeNotification))
@@ -98,11 +108,14 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 				self.currentDocument.presentError(err)
 			} else if let obj = obj {
 				self.replaceObjectInInstruments(at: Int(theIns), withObject: obj)
-				// Same reasoning as importSample(from:)'s reattach above --
-				// a new instrument written into an already-attached
-				// document's struct needs the engine's attach step re-run
-				// to actually become audible in pattern playback.
-				try? self.theDriver.reattachCurrentMusic()
+				// Same reasoning and same logging as importSample(from:)'s
+				// reattach above.
+				do {
+					try self.theDriver.reattachCurrentMusic()
+					NSLog("PPInstrumentPanelController: reattachCurrentMusic succeeded after importing instrument at index %d", theIns)
+				} catch {
+					NSLog("PPInstrumentPanelController: reattachCurrentMusic FAILED after importing instrument at index %d: %@", theIns, error as NSError)
+				}
 				self.instrumentOutline.reloadData()
 			} else {
 				
