@@ -14,7 +14,12 @@ import AudioToolbox
 
 @objc(PPDocument) class PPDocument: NSDocument {	
 	var instrumentList: InstrumentPanelController! = nil
-	var mainViewController: DocumentWindowController! = nil
+	// @objc: WaveViewController.m reaches this to bridge Wave's note-mode
+	// clicks into the Digital editor. Plain internal vars on an NSObject
+	// subclass aren't visible from Objective-C in Swift 4's reduced
+	// implicit-@objc-inference mode (theMusic/theDriver below need the same
+	// explicit marker for the same reason).
+	@objc var mainViewController: DocumentWindowController! = nil
 	// Created lazily, on first use of the Piano menu item -- unlike
 	// instrumentList, there is no reason for this window to always be open
 	// alongside the document.

@@ -80,6 +80,14 @@ class DocumentWindowController: NSWindowController {
 		classicalController?.gridView.enterNote(note)
 	}
 
+	/// The Wave tab's note-mode click bridge: moves the Digital editor's
+	/// cursor to the clicked position without editing anything there, the
+	/// modern equivalent of the original's ShowCurrentCmdNote/
+	/// SetCommandTrack pair. See WAVE-EDITOR-SPEC.md.
+	@objc func selectDigitalPosition(_ row: Int, track: Int) {
+		classicalController?.gridView.setCursorRow(row, track: track, extending: false)
+	}
+
 	// MARK: - Transport
 	//
 	// playButton, reverseButton and fastForwardButton existed in the nib with
