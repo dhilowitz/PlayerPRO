@@ -261,6 +261,12 @@ static NSData *startData()
 
 - (BOOL)exportInstrument:(PPInstrumentObject *)InsHeader toURL:(NSURL *)sampleURL driver:(PPDriver *)driver error:(NSError * _Nullable __autoreleasing * _Nonnull)error
 {
+	// fileHandleForWritingToURL: only opens an EXISTING file -- it never
+	// creates one, so exporting to a name that doesn't exist yet (the
+	// normal case for Export) always fell through to the "else" branch
+	// below, reporting a permission-flavored error rather than the real
+	// "no such file" cause.
+	[[NSFileManager defaultManager] createFileAtPath:sampleURL.path contents:nil attributes:nil];
 	NSFileHandle *iFileRefI = [NSFileHandle fileHandleForWritingToURL:sampleURL error:NULL];
 	if (iFileRefI != NULL) {
 		// Write instrument header

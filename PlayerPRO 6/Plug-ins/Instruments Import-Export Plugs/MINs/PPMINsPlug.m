@@ -232,6 +232,16 @@ static inline OSErr TestMINS(const InstrData *CC)
 - (BOOL)exportInstrument:(PPInstrumentObject *)InsHeader toURL:(NSURL *)sampleURL driver:(PPDriver *)driver error:(NSError * _Nullable __autoreleasing * _Nonnull)error
 {
 	NSError *otherErr = nil;
+	// fileHandleForWritingToURL: only opens an EXISTING file -- it never
+	// creates one, so exporting to a name that doesn't exist yet (the
+	// normal case for Export) always failed here, surfacing as a
+	// permission-flavored error rather than the real "no such file" cause.
+	if (![[NSFileManager defaultManager] createFileAtPath:sampleURL.path contents:nil attributes:nil]) {
+		if (error) {
+			*error = [NSError errorWithDomain:PPMADErrorDomain code:MADWritingErr userInfo:nil];
+		}
+		return NO;
+	}
 	NSFileHandle *fileHand = [NSFileHandle fileHandleForWritingToURL:sampleURL error:&otherErr];
 	if (fileHand == nil) {
 		if (error) {

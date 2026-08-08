@@ -316,6 +316,10 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 
 - (MADErr)exportInstrumentListToURL:(NSURL*)outURL
 {
+	// fileHandleForWritingToURL: only opens an EXISTING file -- it never
+	// creates one, so exporting to a name that doesn't exist yet (the
+	// normal case for Export/Save As) always failed here.
+	[[NSFileManager defaultManager] createFileAtPath:outURL.path contents:nil attributes:nil];
 	NSFileHandle *outData = [NSFileHandle fileHandleForWritingToURL:outURL error:nil];
 	if (!outData) {
 		return MADNeedMemory;
