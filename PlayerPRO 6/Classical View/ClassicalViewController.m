@@ -52,6 +52,13 @@ static void *kMusicContext = &kMusicContext;
 	[self.view addSubview:scroller];
 	self.gridScrollView = scroller;
 
+	// Route edits through the document: its undo manager drives the Edit menu,
+	// and the change count is what makes the window dirty and prompts to save.
+	__weak typeof(self) weakSelf = self;
+	self.gridView.didEditPattern = ^{
+		[[weakSelf resolvedDocument] updateChangeCount:NSChangeDone];
+	};
+
 	PPDocument *doc = [self resolvedDocument];
 	if (doc) {
 		[doc addObserver:self
@@ -106,6 +113,7 @@ static void *kMusicContext = &kMusicContext;
 		return;
 	}
 
+	self.gridView.editUndoManager = [self resolvedDocument].undoManager;
 	self.gridView.trackCount = MAX(1, (NSInteger)music.totalTracks);
 	self.gridView.pattern = music.patterns[0];
 }

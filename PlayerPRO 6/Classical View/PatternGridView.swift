@@ -276,21 +276,22 @@ open class PatternGridView: NSView {
 		}
 
 		let row = cursorRow, track = cursorTrack
-		pattern.modifyCommand(atPosition: Int16(row), channel: Int16(track)) { cmd in
-			cmd.pointee.note = MADByte(note)
-			if self.writesInstrument { cmd.pointee.ins = self.defaultInstrument }
-			if self.writesEffect, let eff = MADEffectID(rawValue: self.defaultEffect) {
-				cmd.pointee.cmd = eff
-			}
-			if self.writesArgument   { cmd.pointee.arg = self.defaultArgument }
-			if self.writesVolume {
-				// a default of 0 means "no volume command", not volume zero
-				cmd.pointee.vol = self.defaultVolume == 0 ? 0xFF : self.defaultVolume
+		withUndo(NSLocalizedString("Key Press", comment: "undo name for typing a note")) {
+			pattern.modifyCommand(atPosition: Int16(row), channel: Int16(track)) { cmd in
+				cmd.pointee.note = MADByte(note)
+				if self.writesInstrument { cmd.pointee.ins = self.defaultInstrument }
+				if self.writesEffect, let eff = MADEffectID(rawValue: self.defaultEffect) {
+					cmd.pointee.cmd = eff
+				}
+				if self.writesArgument   { cmd.pointee.arg = self.defaultArgument }
+				if self.writesVolume {
+					// a default of 0 means "no volume command", not volume zero
+					cmd.pointee.vol = self.defaultVolume == 0 ? 0xFF : self.defaultVolume
+				}
 			}
 		}
 
 		setNeedsDisplay(cellRect(row: row, track: track))
-		didEditPattern?()
 
 		// advance by the step, wrapping inside the pattern
 		moveCursor(dRow: step, dTrack: 0, extending: false)
@@ -301,6 +302,113 @@ open class PatternGridView: NSView {
 		return NSRect(x: trackX(track),
 					  y: headerHeight + CGFloat(row) * rowHeight,
 					  width: trackWidth, height: rowHeight)
+	}
+
+	// MARK: Editing
+	//
+	// Delete and transpose act on the whole selection rectangle, and every
+	// mutation registers undo before touching anything. The original snapshots
+	// the entire pattern per edit rather than tracking individual cells, and
+	// gives each a readable name that reaches the Edit menu; this does the same.
+
+	/// Undo manager to register with. Falls back to the responder chain, which
+	/// reaches the document once the view is in a window.
+	@objc open var editUndoManager: UndoManager?
+
+	private var effectiveUndoManager: UndoManager? {
+		return editUndoManager ?? undoManager
+	}
+
+	private func snapshotPattern() -> [Cmd] {
+		guard let pattern = pattern, rowCount > 0, trackCount > 0 else { return [] }
+		var out = [Cmd]()
+		out.reserveCapacity(rowCount * trackCount)
+		for track in 0..<trackCount {
+			for row in 0..<rowCount {
+				out.append(pattern.getCommand(position: Int16(row), channel: Int16(track)).theCommand)
+			}
+		}
+		return out
+	}
+
+	private func restorePattern(_ cmds: [Cmd]) {
+		guard let pattern = pattern, rowCount > 0, trackCount > 0,
+			  cmds.count == rowCount * trackCount else { return }
+		let redo = snapshotPattern()
+		var i = 0
+		for track in 0..<trackCount {
+			for row in 0..<rowCount {
+				pattern.replaceCommand(atPosition: Int16(row), channel: Int16(track), cmd: cmds[i])
+				i += 1
+			}
+		}
+		effectiveUndoManager?.registerUndo(withTarget: self) { target in
+			target.restorePattern(redo)
+		}
+		needsDisplay = true
+		didEditPattern?()
+	}
+
+	/// Snapshot, register undo under `name`, then run the edit.
+	private func withUndo(_ name: String, _ body: () -> Void) {
+		let snapshot = snapshotPattern()
+		if let um = effectiveUndoManager {
+			um.registerUndo(withTarget: self) { target in
+				target.restorePattern(snapshot)
+			}
+			um.setActionName(name)
+		}
+		body()
+		didEditPattern?()
+	}
+
+	/// Run `body` over every cell of the selection.
+	private func forEachSelectedCell(_ body: (Int, Int) -> Void) {
+		let rows = selectedRowRange, tracks = selectedTrackRange
+		for track in tracks.location..<(tracks.location + tracks.length) {
+			for row in rows.location..<(rows.location + rows.length) {
+				body(row, track)
+			}
+		}
+	}
+
+	/// Clear the selection to genuinely empty cells. Note 0xFF and volume 0xFF
+	/// mean "absent"; instrument, effect and argument are absent at 0.
+	@objc open func deleteSelection() {
+		guard let pattern = pattern else { return }
+		withUndo(NSLocalizedString("Delete", comment: "undo name for clearing cells")) {
+			forEachSelectedCell { row, track in
+				pattern.modifyCommand(atPosition: Int16(row), channel: Int16(track)) { cmd in
+					cmd.pointee.ins = 0
+					cmd.pointee.note = 0xFF
+					cmd.pointee.cmd = MADEffectID(rawValue: 0) ?? cmd.pointee.cmd
+					cmd.pointee.arg = 0
+					cmd.pointee.vol = 0xFF
+				}
+			}
+		}
+		setNeedsDisplay(selectionRect())
+	}
+
+	/// Shift every note in the selection by `semitones`, leaving empty cells
+	/// alone and clamping at the ends of the range rather than wrapping.
+	@objc open func transposeSelection(by semitones: Int) {
+		guard let pattern = pattern, semitones != 0 else { return }
+		let name = semitones > 0
+			? NSLocalizedString("Transpose Up", comment: "undo name")
+			: NSLocalizedString("Transpose Down", comment: "undo name")
+		withUndo(name) {
+			forEachSelectedCell { row, track in
+				pattern.modifyCommand(atPosition: Int16(row), channel: Int16(track)) { cmd in
+					let note = Int(cmd.pointee.note)
+					guard note != 0xFF else { return }		// nothing to transpose
+					let moved = note + semitones
+					guard moved >= 0 && moved < 96 else { return }
+					cmd.pointee.note = MADByte(moved)
+				}
+			}
+		}
+		setNeedsDisplay(selectionRect())
 	}
 
 	// MARK: Input
@@ -372,13 +480,25 @@ open class PatternGridView: NSView {
 			moveCursor(dRow: -16, dTrack: 0, extending: extending)
 		case NSPageDownFunctionKey:
 			moveCursor(dRow: 16, dTrack: 0, extending: extending)
+		case NSDeleteFunctionKey, Int(NSDeleteCharacter), Int(NSBackspaceCharacter):
+			deleteSelection()
 		default:
 			// note entry uses the shifted characters, so read them with
 			// modifiers applied rather than charactersIgnoringModifiers
-			if let typed = event.characters?.first, handleNoteKey(typed) {
+			guard let typed = event.characters?.first else {
+				super.keyDown(with: event)
 				return
 			}
-			super.keyDown(with: event)
+			switch typed {
+			case "/":
+				transposeSelection(by: -1)
+			case "*":
+				transposeSelection(by: 1)
+			default:
+				if !handleNoteKey(typed) {
+					super.keyDown(with: event)
+				}
+			}
 		}
 	}
 
