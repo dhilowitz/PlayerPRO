@@ -138,8 +138,30 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		}
 	}
 	
+	// The actual audition primitive both playInstrument(_:) (the toolbar
+	// button) and playSample(_:) (each row's inline play button) feed into
+	// -- this was completely empty, so neither one has ever played audio
+	// this whole port's life. A force-cast crash in playSample(_:) was
+	// fixed earlier in this project's history, but that only stopped the
+	// crash; it never made this body do anything. Same
+	// PPDriver.playSoundData(...withNote:) primitive PianoKeyboardView/
+	// BoxGridView's audition(note:) already use, which pitch-shifts from
+	// the sample's own base rate.
 	func playSample(instrument: Int16, sample sampleNumber: Int16, volume: UInt8 = 0xFF, note: UInt8 = 0xFF) {
-		
+		guard instrument >= 0, Int(instrument) < currentDocument.theMusic.instruments.count else { return }
+		let ins = currentDocument.theMusic.instruments[Int(instrument)]
+		guard sampleNumber >= 0, Int(sampleNumber) < ins.countOfSamples else { return }
+		let samp = ins.samplesObject(at: Int(sampleNumber))
+		guard let data = samp.data else { return }
+
+		let channel = Int32(theDriver.availableChannel)
+		guard channel >= 0 else { return }
+
+		let playNote = note == 0xFF ? UInt8(samp.realNote) : note
+		let playVolume = volume == 0xFF ? Int16(samp.volume) : Int16(volume)
+		try? theDriver.playSoundData(from: data as Data, fromChannel: channel,
+									  amplitude: playVolume, bitRate: UInt32(samp.c2spd),
+									  isStereo: samp.isStereo, withNote: playNote)
 	}
 	
 	override func awakeFromNib() {
@@ -234,8 +256,14 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		
 	}
 	
+	// Wired to InsPanel's toolbar Play button (InsPanel.xib), which
+	// previously had no action connection at all -- clicking it couldn't
+	// have done anything regardless of this method's body. Plays the
+	// selected instrument's first sample, same primitive PianoKeyboardView/
+	// BoxGridView's audition(note:) already use elsewhere in this port.
 	@IBAction func playInstrument(_ sender: AnyObject!) {
-		
+		guard let instrument = selectedInstrument, instrument.countOfSamples > 0 else { return }
+		playSample(instrument: Int16(instrument.number), sample: 0)
 	}
 	
 	@IBAction func showInstrumentInfo(_ sender: AnyObject!) {

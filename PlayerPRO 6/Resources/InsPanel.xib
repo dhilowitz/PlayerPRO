@@ -186,7 +186,11 @@
                             <action selector="toggleInfo:" target="-2" id="wF3-tg-Rvm"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="BA8D706B-FDF3-4DC6-A7FC-545B7AE63C00" label="Play" paletteLabel="Play Sample" tag="-1" image="PPPlay" id="xq3-Hx-lFI"/>
+                    <toolbarItem implicitItemIdentifier="BA8D706B-FDF3-4DC6-A7FC-545B7AE63C00" label="Play" paletteLabel="Play Sample" tag="-1" image="PPPlay" id="xq3-Hx-lFI">
+                        <connections>
+                            <action selector="playInstrument:" target="-2" id="pQ8-pT-Vn3"/>
+                        </connections>
+                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="MgW-kx-itr"/>
