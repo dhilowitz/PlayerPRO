@@ -75,6 +75,9 @@
                                                     <subviews>
                                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="vPR-h2-mEt">
                                                             <rect key="frame" x="2" y="4" width="40" height="17"/>
+                                                            <constraints>
+                                                                <constraint firstAttribute="height" constant="17" id="pQd-8n-Yz3"/>
+                                                            </constraints>
                                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="000" id="wfB-lh-oeu">
                                                                 <font key="font" metaFont="system"/>
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
