@@ -864,6 +864,7 @@
 		55FD51FB19BD1DDA00986849 /* PPToneGeneratorPlug.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FD51FA19BD1DDA00986849 /* PPToneGeneratorPlug.m */; };
 		55FD51FE19BD279A00986849 /* PPSmoothPlug.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FD51FD19BD279A00986849 /* PPSmoothPlug.m */; };
 		55FEF84519844FD600D2E79C /* DigitalViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FEF84419844FD600D2E79C /* DigitalViewController.m */; };
+		55FA200C2DA000030000000C /* ClassicGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA200B2DA000030000000B /* ClassicGridView.swift */; };
 		55FEF84B1984506C00D2E79C /* ClassicalViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FEF84A1984506C00D2E79C /* ClassicalViewController.m */; };
 		55FA10022DA0000200000002 /* PatternGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA10012DA0000200000001 /* PatternGridView.swift */; };
 		55FA20022DA0000300000002 /* PianoKeyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20012DA0000300000001 /* PianoKeyMap.swift */; };
@@ -3008,6 +3009,7 @@
 		55FD51FD19BD279A00986849 /* PPSmoothPlug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPSmoothPlug.m; sourceTree = "<group>"; };
 		55FEF84319844FD600D2E79C /* DigitalViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DigitalViewController.h; sourceTree = "<group>"; };
 		55FEF84419844FD600D2E79C /* DigitalViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DigitalViewController.m; sourceTree = "<group>"; };
+		55FA200B2DA000030000000B /* ClassicGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicGridView.swift; sourceTree = "<group>"; };
 		55FEF8491984506C00D2E79C /* ClassicalViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClassicalViewController.h; sourceTree = "<group>"; };
 		55FEF84A1984506C00D2E79C /* ClassicalViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClassicalViewController.m; sourceTree = "<group>"; };
 		55FA10012DA0000200000001 /* PatternGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternGridView.swift; sourceTree = "<group>"; };
@@ -5152,6 +5154,7 @@
 			children = (
 				55FEF84319844FD600D2E79C /* DigitalViewController.h */,
 				55FEF84419844FD600D2E79C /* DigitalViewController.m */,
+				55FA200B2DA000030000000B /* ClassicGridView.swift */,
 			);
 			path = "Digital View";
 			sourceTree = "<group>";
@@ -8338,6 +8341,7 @@
 				555F5C611993327D0056AF01 /* OpenPanelViewController.swift in Sources */,
 				55852E1C18D67CCB0009BF55 /* PPSmallPianoView.m in Sources */,
 				55FEF84519844FD600D2E79C /* DigitalViewController.m in Sources */,
+				55FA200C2DA000030000000C /* ClassicGridView.swift in Sources */,
 				55232AD811FDDFEA0041A4EC /* PianoPreferencesController.m in Sources */,
 				55BF239019A94077005B1F96 /* PPComplexImportPlugObject.m in Sources */,
 				5533C8FA19942AD9003AEB16 /* SoundOutputController.swift in Sources */,

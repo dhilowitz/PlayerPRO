@@ -158,8 +158,10 @@ class DocumentWindowController: NSWindowController {
 		// highlight while that is the pattern actually playing.
 		if driver.patternIdentifier == 0 {
 			classicalController?.gridView.playbackRow = Int(driver.patternPosition)
+			digitalController?.gridView.playbackRow = Int(driver.patternPosition)
 		} else {
 			classicalController?.gridView.playbackRow = -1
+			digitalController?.gridView.playbackRow = -1
 		}
 
 		if !driver.isPlayingMusic {
