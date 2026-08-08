@@ -199,15 +199,54 @@ open class WaveGridView: NSView {
 
 	private var peakCache: PeakCache?
 
+	/// Range currently queued for a background-of-the-runloop render, if
+	/// any -- guards against piling up redundant requests while scrolling/
+	/// zooming quickly, and against a now-stale request overwriting a
+	/// fresher cache once it finally completes.
+	private var pendingRange: (fromRow: Int, toRow: Int, xSize: CGFloat)?
+
+	/// Returns the cached peaks for this range if already computed;
+	/// otherwise queues a render and returns nil for this pass (the
+	/// caller draws blank until it completes and calls needsDisplay).
+	///
+	/// renderPeaks runs a real audio decode loop (stop/seek/play/
+	/// directSave, per channel) -- calling it synchronously from here
+	/// used to mean running it *inside* draw(_:), i.e. inside an active
+	/// Core Animation rendering pass. That's the likely cause of a Metal/
+	/// IOGPU crash seen after this tab started actually rendering (once an
+	/// earlier, unrelated crash in the render pipeline was fixed):
+	/// hammering CoreAudio's HAL from inside a live Metal commit is not a
+	/// combination anything here was designed to survive. Deferred to the
+	/// next run-loop turn instead -- still the main thread, not a
+	/// background queue, since the underlying engine (PPDriver/
+	/// MADDriverRec) has no documented thread-safety guarantee and this
+	/// project has no way to verify one without live testing.
 	private func peaks(forVisibleRange fromRow: Int, _ toRow: Int) -> [[WaveformRenderer.Peak]]? {
 		if let cache = peakCache, cache.fromRow == fromRow, cache.toRow == toRow, cache.xSize == xSize {
 			return cache.peaksByChannel
 		}
 		guard let renderer = renderer, toRow > fromRow else { return nil }
+
+		if let pending = pendingRange, pending.fromRow == fromRow, pending.toRow == toRow, pending.xSize == xSize {
+			return nil		// already queued for this exact range
+		}
+
 		let columns = toRow - fromRow
-		let peaksByChannel = renderer.renderPeaks(fromRow: fromRow, toRow: toRow, columns: columns, sampleRate: renderSampleRate)
-		peakCache = PeakCache(fromRow: fromRow, toRow: toRow, xSize: xSize, peaksByChannel: peaksByChannel)
-		return peaksByChannel
+		let rate = renderSampleRate
+		pendingRange = (fromRow, toRow, xSize)
+
+		DispatchQueue.main.async { [weak self] in
+			guard let self = self else { return }
+			guard let pending = self.pendingRange,
+				  pending.fromRow == fromRow, pending.toRow == toRow, pending.xSize == self.xSize else {
+				return		// a newer request has since superseded this one
+			}
+			let peaksByChannel = renderer.renderPeaks(fromRow: fromRow, toRow: toRow, columns: columns, sampleRate: rate)
+			self.pendingRange = nil
+			self.peakCache = PeakCache(fromRow: fromRow, toRow: toRow, xSize: self.xSize, peaksByChannel: peaksByChannel)
+			self.needsDisplay = true
+		}
+		return nil
 	}
 
 	// MARK: Drawing
