@@ -238,9 +238,10 @@ open class PatternGridView: NSView {
 		return map
 	}()
 
-	/// Typing enters notes only while this is on. The original gates it behind
-	/// a record button; there is no such button yet, so it defaults to on.
-	@objc open var recording: Bool = true
+	/// Typing enters notes only while this is on, as in the original. Off by
+	/// default so the grid can be navigated without editing it by accident;
+	/// the Record checkbox above the grid turns it on.
+	@objc open var recording: Bool = false
 
 	/// Whole-octave shift applied to every typed note, as pianoOffset does.
 	@objc open var octaveOffset: Int = 0
