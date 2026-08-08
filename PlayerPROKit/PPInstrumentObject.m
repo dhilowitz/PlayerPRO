@@ -942,10 +942,26 @@ static const dispatch_block_t initUTIArray = ^{
 
 - (void)resetInstrument
 {
+	// Every instrument owns a fixed MAXSAMPLE-sized block of music->sample[]
+	// at MAXSAMPLE * its own index (see -initWithMusic:instrumentIndex: and
+	// -initWithMusicStruct:atIndex:). Unconditionally zeroing firstSample
+	// here made every instrument other than 0 alias instrument 0's block:
+	// resetting instrument 5 and adding one sample silently overwrote and
+	// destroyed instrument 0's sample data on the next save. Recompute it
+	// from this instrument's own index instead, captured before it is
+	// cleared below.
+	NSInteger originalIndex = number;
 	[self removeSamplesAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, samples.count)]];
 	writebackAddr->no = number = -1;
-	writebackAddr->firstSample = 0;
-	MADResetInstrument(&theInstrument);
+	writebackAddr->firstSample = (originalIndex >= 0) ? (MAXSAMPLE * originalIndex) : 0;
+	// theInstrument is only a snapshot copy taken at init time; writebackAddr
+	// is what actually backs this object (the live struct field for an
+	// attached instrument, or &theInstrument itself when unattached -- see
+	// -initWithMusic:). Resetting &theInstrument left every field other than
+	// name/firstSample/no completely unaffected on an attached instrument:
+	// confirmed by setting volumeFadeOut, calling -resetInstrument, and
+	// finding it unchanged.
+	MADResetInstrument(writebackAddr);
 	self.name = @"";
 	for (int i = 0; i < 12; i++) {
 		[self replaceObjectInPanningEnvelopeAtIndex:i withObject:[PPEnvelopeObject new]];
