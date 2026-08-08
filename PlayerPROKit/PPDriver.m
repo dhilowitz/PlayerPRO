@@ -507,7 +507,13 @@
 
 - (BOOL)isChannelActiveAtIndex:(NSInteger)idx
 {
-	NSParameterAssert(idx > 255 || idx < 0);
+	// Active[] is declared bool Active[MAXTRACK] (MAXTRACK == 256), so valid
+	// indices are 0...255. This assert previously required the opposite --
+	// idx > 255 || idx < 0 -- so it fired on every normal, in-range channel
+	// index and never once on an actual out-of-range one. Invisible until
+	// now because every build exercising it this project has done so far
+	// was Release-configured, where NSParameterAssert compiles out.
+	NSParameterAssert(idx >= 0 && idx <= 255);
 	MADDriverBase *drivBase = GetDriverBase();
 	
 	return drivBase->Active[idx];
@@ -515,7 +521,13 @@
 
 - (void)setChannelAtIndex:(NSInteger)idx toActive:(BOOL)enabled
 {
-	NSParameterAssert(idx > 255 || idx < 0);
+	// Active[] is declared bool Active[MAXTRACK] (MAXTRACK == 256), so valid
+	// indices are 0...255. This assert previously required the opposite --
+	// idx > 255 || idx < 0 -- so it fired on every normal, in-range channel
+	// index and never once on an actual out-of-range one. Invisible until
+	// now because every build exercising it this project has done so far
+	// was Release-configured, where NSParameterAssert compiles out.
+	NSParameterAssert(idx >= 0 && idx <= 255);
 	MADDriverBase *drivBase = GetDriverBase();
 	
 	drivBase->Active[idx] = enabled;
