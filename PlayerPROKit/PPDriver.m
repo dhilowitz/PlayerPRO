@@ -414,9 +414,12 @@
 
 - (MADChannel)channelAtIndex:(NSInteger)idx
 {
-	NSParameterAssert(idx > MAXTRACK || idx < 0);
+	// chan[] is declared MADChannel chan[MAXTRACK], so valid indices are
+	// 0..<MAXTRACK. Same inverted-assertion bug as isChannelActiveAtIndex:/
+	// setChannelAtIndex:toActive: below -- see the comment there.
+	NSParameterAssert(idx >= 0 && idx < MAXTRACK);
 	MADDriverBase *drivBase = GetDriverBase();
-	
+
 	return drivBase->chan[idx];
 }
 
@@ -428,9 +431,12 @@
 }
 - (void)setPatternPosition:(short)patternPosition
 {
-	NSParameterAssert(patternPosition > MAXPOINTER);
+	// Same inverted-assertion bug shape as isChannelActiveAtIndex:/
+	// setChannelAtIndex:toActive: below -- this required patternPosition to
+	// be OUT of range to pass.
+	NSParameterAssert(patternPosition >= 0 && patternPosition <= MAXPOINTER);
 	MADDriverBase *drivBase = GetDriverBase();
-	
+
 	drivBase->PartitionReader = patternPosition;
 }
 
@@ -471,9 +477,12 @@
 
 - (void)setVolume:(short)volume
 {
-	NSParameterAssert(volume > 64 || volume < 0);
+	// Same inverted-assertion bug shape as isChannelActiveAtIndex:/
+	// setChannelAtIndex:toActive: below -- volume is documented "0 to 64"
+	// in PPDriver.h, so 0...64 is the valid range, not its complement.
+	NSParameterAssert(volume >= 0 && volume <= 64);
 	MADDriverBase *drivBase = GetDriverBase();
-	
+
 	drivBase->VolGlobal = volume;
 }
 
