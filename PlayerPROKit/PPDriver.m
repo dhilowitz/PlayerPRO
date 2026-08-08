@@ -41,6 +41,21 @@
 	}
 }
 
+- (BOOL)reattachCurrentMusicWithError:(NSError * _Nullable __autoreleasing * _Nullable)error
+{
+	if (!currentMusic) {
+		return NO;
+	}
+	MADErr iErr = MADAttachDriverToMusic(theRec, currentMusic._currentMusic, NULL);
+	if (iErr != MADNoErr) {
+		if (error) {
+			*error = PPCreateErrorFromMADErrorType(iErr);
+		}
+		return NO;
+	}
+	return YES;
+}
+
 - (NSTimeInterval)totalMusicPlaybackTime
 {
 	MADErr iErr;

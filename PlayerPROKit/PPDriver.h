@@ -44,6 +44,27 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (BOOL)changeDriverSettingsToSettings:(MADDriverSettings*)theSett error:(out NSError* __nullable __autoreleasing* __nullable)error NS_SWIFT_NAME(changeDriverSettings(to:));
 
+/*!
+ *	@method		reattachCurrentMusic
+ *	@abstract	Re-runs the engine's attach step (MADAttachDriverToMusic) for
+ *		whatever's already in currentMusic, without changing what's
+ *		attached and without resetting playback position.
+ *	@discussion	-setCurrentMusic: only calls MADAttachDriverToMusic when the
+ *		music object actually changes. Modifying an already-attached
+ *		PPMusicObject in place -- e.g. importing a new sample into a
+ *		document that's already open -- writes through to the MADMusic
+ *		struct correctly, but the engine has no other way to notice:
+ *		MADAttachDriverToMusic is where per-attach engine state (channel/
+ *		track setup, effect chains) gets (re)built, and it's specifically
+ *		designed to be safely re-callable with the same music pointer
+ *		(it checks whether the pointer actually changed before deciding
+ *		whether to reset playback position). This is that re-call, exposed
+ *		for exactly that situation.
+ *	@return		NO if there is no currentMusic, or the engine reported an
+ *		error; the association isn't broken either way.
+ */
+- (BOOL)reattachCurrentMusicWithError:(out NSError* __nullable __autoreleasing* __nullable)error NS_SWIFT_NAME(reattachCurrentMusic());
+
 - (void)beginExport;
 - (void)endExport;
 

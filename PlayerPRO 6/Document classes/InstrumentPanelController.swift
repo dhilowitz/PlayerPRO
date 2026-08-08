@@ -67,6 +67,18 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 				self.currentDocument.presentError(err)
 			} else if let obj = obj {
 				targetInstrument.add(obj)
+				// The writeback into the MADMusic struct above is correct on
+				// its own, but the live engine only ever runs its attach
+				// step (which builds its own per-attach state) when
+				// currentMusic actually changes -- it has no other way to
+				// notice a sample added to an already-attached document.
+				// Without this, the new sample shows up fine in this UI and
+				// even plays via the toolbar/row preview buttons (those read
+				// PPSampleObject.data directly, bypassing the engine
+				// entirely), but pattern playback through the transport
+				// can't find it until the document is closed and reopened,
+				// which forces a fresh attach.
+				try? self.theDriver.reattachCurrentMusic()
 				self.instrumentOutline.reloadData()
 				self.instrumentOutline.expandItem(targetInstrument)
 				self.outlineViewSelectionDidChange(Notification(name: NSOutlineView.selectionDidChangeNotification))
@@ -74,18 +86,23 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 			}
 		}
 	}
-	
+
 	func importInstrument(from sampURL: URL, makeUserSelectInstrument selIns: Bool = false) throws {
 		//TODO: handle selIns
 		let plugType: MADFourChar = try instrumentImporter.identifyInstrumentFile(sampURL)
 		var theSamp: Int16 = 0;
 		var theIns: Int16  = 0;
-		
+
 		instrumentImporter.beginImportingInstrument(ofType: plugType, from: sampURL, driver: currentDocument.theDriver, parentDocument: currentDocument) { (err, obj) in
 			if let err = err {
 				self.currentDocument.presentError(err)
 			} else if let obj = obj {
 				self.replaceObjectInInstruments(at: Int(theIns), withObject: obj)
+				// Same reasoning as importSample(from:)'s reattach above --
+				// a new instrument written into an already-attached
+				// document's struct needs the engine's attach step re-run
+				// to actually become audible in pattern playback.
+				try? self.theDriver.reattachCurrentMusic()
 				self.instrumentOutline.reloadData()
 			} else {
 				
@@ -111,12 +128,12 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		}
 
 		let openPanel = NSOpenPanel()
-		openPanel.directoryURL = PPLastDirectory.url(for: "instrumentImport")
+		openPanel.directoryURL = PPLastDirectory.url(for: "instrumentFile")
 		if let vc = OpenPanelViewController(openPanel: openPanel, instrumentDictionary:fileDict) {
 			vc.setupDefaults()
 			vc.beginOpenPanel(currentDocument.windowForSheet!, completionHandler: { (panelHandle: NSApplication.ModalResponse) -> Void in
 				if panelHandle.rawValue == NSFileHandlingPanelOKButton {
-					PPLastDirectory.remember(openPanel.url!, for: "instrumentImport")
+					PPLastDirectory.remember(openPanel.url!, for: "instrumentFile")
 					do {
 						_ = try self.instrumentImporter.identifyInstrumentFile(openPanel.url!)
 						try self.importInstrument(from: openPanel.url!)
@@ -217,11 +234,11 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		savePanel.accessoryView = popup
 		savePanel.nameFieldStringValue = instrument.name
 		savePanel.allowedFileTypes = exportPlugs[0].utiTypes
-		savePanel.directoryURL = PPLastDirectory.url(for: "instrumentExport")
+		savePanel.directoryURL = PPLastDirectory.url(for: "instrumentFile")
 
 		savePanel.beginSheetModal(for: currentDocument.windowForSheet!) { [pendingExportPlugs] result in
 			guard result == .OK, let url = savePanel.url else { return }
-			PPLastDirectory.remember(url, for: "instrumentExport")
+			PPLastDirectory.remember(url, for: "instrumentFile")
 			self.performExport(instrument, using: pendingExportPlugs[popup.indexOfSelectedItem], to: url)
 		}
 	}
@@ -235,11 +252,11 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		savePanel.allowedFileTypes = plug.utiTypes
 		savePanel.nameFieldStringValue = instrument.name
 		savePanel.title = String(format: NSLocalizedString("Export as %@", comment: "export instrument panel title"), plug.menuName)
-		savePanel.directoryURL = PPLastDirectory.url(for: "instrumentExport")
+		savePanel.directoryURL = PPLastDirectory.url(for: "instrumentFile")
 
 		savePanel.beginSheetModal(for: currentDocument.windowForSheet!) { result in
 			guard result == .OK, let url = savePanel.url else { return }
-			PPLastDirectory.remember(url, for: "instrumentExport")
+			PPLastDirectory.remember(url, for: "instrumentFile")
 			self.performExport(instrument, using: plug, to: url)
 		}
 	}
