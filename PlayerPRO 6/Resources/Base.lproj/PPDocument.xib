@@ -117,7 +117,7 @@
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </box>
-                    <tabView initialItem="ykk-c8-31L" id="eP8-FW-QMd">
+                    <tabView initialItem="gav-7k-IAf" id="eP8-FW-QMd">
                         <rect key="frame" x="13" y="10" width="583" height="354"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
@@ -235,7 +235,7 @@ Gw
         <viewController id="fvI-Iq-sXE" userLabel="Digital View Controller" customClass="DigitalViewController">
             <connections>
                 <outlet property="currentDocument" destination="-2" id="sNh-Il-43a"/>
-                <outlet property="view" destination="3cF-zg-o6h" id="iSe-6E-HLQ"/>
+                <outlet property="view" destination="9ML-I9-VAO" id="iSe-6E-HLQ"/>
             </connections>
         </viewController>
         <viewController id="LsL-Pc-9w4" customClass="BoxViewController" customModule="PlayerPRO_6" customModuleProvider="target">
@@ -247,7 +247,7 @@ Gw
         <viewController id="euO-9U-7Ee" userLabel="Classic View Controller" customClass="ClassicalViewController">
             <connections>
                 <outlet property="currentDocument" destination="-2" id="lhU-Va-wbQ"/>
-                <outlet property="view" destination="9ML-I9-VAO" id="xzn-pU-xhT"/>
+                <outlet property="view" destination="3cF-zg-o6h" id="xzn-pU-xhT"/>
             </connections>
         </viewController>
         <viewController id="UmV-E5-CNH" userLabel="Wave View Controller" customClass="WaveViewController">
