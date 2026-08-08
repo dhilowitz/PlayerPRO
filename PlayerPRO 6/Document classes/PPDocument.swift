@@ -133,6 +133,18 @@ import AudioToolbox
 			}
 			insWindow.setFrameOrigin(origin)
 		}
+
+		// NSDocument shows window controllers in the order they were added,
+		// each via its own showWindow(_:)/makeKeyAndOrderFront -- so
+		// instrumentList (added second, above) ends up key, not the main
+		// document window. Every menu item whose action lives on
+		// DocumentWindowController (Instruments List, Partition List, etc.)
+		// is validated against the key window's responder chain, so with
+		// the instrument panel key they all show up grayed out until the
+		// user happens to click the document window themselves. Re-key the
+		// document window explicitly so the menu bar is correct from the
+		// moment a document opens.
+		docWinCon.window?.makeKeyAndOrderFront(self)
 	}
 
 	/// Shows this document's piano keyboard window, creating it on first use.
