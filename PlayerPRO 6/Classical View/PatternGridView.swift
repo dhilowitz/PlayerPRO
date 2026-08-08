@@ -39,6 +39,81 @@ open class PatternGridView: NSView {
 		return Int(pattern?.patternSize ?? 64)
 	}
 
+	// MARK: Cursor and selection
+	//
+	// The classic editor selects a rectangle over (track, position) rather than
+	// a single cell, and Delete, transpose and copy all act on that rectangle.
+	// The cursor is one corner of it; an unextended selection is a single cell.
+
+	/// Row and track the cursor sits on.
+	@objc open private(set) var cursorRow: Int = 0
+	@objc open private(set) var cursorTrack: Int = 0
+
+	/// The other corner of the selection. Equal to the cursor when nothing is
+	/// extended.
+	private var anchorRow: Int = 0
+	private var anchorTrack: Int = 0
+
+	/// Rows moved per arrow press and per note entry. The editor calls this the
+	/// step, and it is 1 by default.
+	@objc open var step: Int = 1
+
+	/// Selection bounds, normalised so top <= bottom and left <= right.
+	@objc open var selectedRowRange: NSRange {
+		let lo = min(cursorRow, anchorRow), hi = max(cursorRow, anchorRow)
+		return NSRange(location: lo, length: hi - lo + 1)
+	}
+
+	@objc open var selectedTrackRange: NSRange {
+		let lo = min(cursorTrack, anchorTrack), hi = max(cursorTrack, anchorTrack)
+		return NSRange(location: lo, length: hi - lo + 1)
+	}
+
+	private func isSelected(row: Int, track: Int) -> Bool {
+		return NSLocationInRange(row, selectedRowRange)
+			&& NSLocationInRange(track, selectedTrackRange)
+	}
+
+	/// Move the cursor, optionally dragging the selection with it.
+	@objc open func setCursorRow(_ row: Int, track: Int, extending: Bool) {
+		let oldSel = selectionRect()
+		cursorRow = clampRow(row)
+		cursorTrack = clampTrack(track)
+		if !extending {
+			anchorRow = cursorRow
+			anchorTrack = cursorTrack
+		}
+		setNeedsDisplay(oldSel.union(selectionRect()))
+		scrollCursorToVisible()
+	}
+
+	private func clampRow(_ r: Int) -> Int {
+		guard rowCount > 0 else { return 0 }
+		return max(0, min(rowCount - 1, r))
+	}
+
+	private func clampTrack(_ t: Int) -> Int {
+		guard trackCount > 0 else { return 0 }
+		return max(0, min(trackCount - 1, t))
+	}
+
+	private func selectionRect() -> NSRect {
+		let rows = selectedRowRange, tracks = selectedTrackRange
+		return NSRect(x: trackX(tracks.location),
+					  y: headerHeight + CGFloat(rows.location) * rowHeight,
+					  width: CGFloat(tracks.length) * trackWidth,
+					  height: CGFloat(rows.length) * rowHeight)
+	}
+
+	private func scrollCursorToVisible() {
+		var r = NSRect(x: trackX(cursorTrack),
+					   y: headerHeight + CGFloat(cursorRow) * rowHeight,
+					   width: trackWidth, height: rowHeight)
+		// keep the header from covering the cursor when scrolled to the top
+		r = r.insetBy(dx: 0, dy: -headerHeight)
+		scrollToVisible(r)
+	}
+
 	// MARK: Metrics
 
 	private let rowHeight: CGFloat = 14
@@ -74,6 +149,8 @@ open class PatternGridView: NSView {
 	private let offBand = NSColor.white
 	private let playbackBand = NSColor(calibratedRed: 0.72, green: 0.85, blue: 0.72, alpha: 1)
 	private let gutterBack = NSColor(calibratedWhite: 0.93, alpha: 1)
+	private let selectionFill = NSColor(calibratedRed: 0.30, green: 0.55, blue: 0.95, alpha: 0.28)
+	private let cursorStroke = NSColor(calibratedRed: 0.10, green: 0.35, blue: 0.85, alpha: 1)
 
 	private static let noteNames = ["C-", "C#", "D-", "D#", "E-", "F-",
 								   "F#", "G-", "G#", "A-", "A#", "B-"]
@@ -133,6 +210,105 @@ open class PatternGridView: NSView {
 		return arg == 0 ? "··" : String(format: "%02X", Int(arg))
 	}
 
+	// MARK: Input
+
+	open override var acceptsFirstResponder: Bool {
+		return true
+	}
+
+	open override func becomeFirstResponder() -> Bool {
+		needsDisplay = true
+		return super.becomeFirstResponder()
+	}
+
+	open override func resignFirstResponder() -> Bool {
+		needsDisplay = true
+		return super.resignFirstResponder()
+	}
+
+	/// Which cell a point lands in, or nil when it is in the gutter or header.
+	private func cell(at point: NSPoint) -> (row: Int, track: Int)? {
+		guard point.x >= gutterWidth, point.y >= headerHeight, trackWidth > 0 else {
+			return nil
+		}
+		let track = Int((point.x - gutterWidth) / trackWidth)
+		let row = Int((point.y - headerHeight) / rowHeight)
+		guard track >= 0, track < trackCount, row >= 0, row < rowCount else {
+			return nil
+		}
+		return (row, track)
+	}
+
+	open override func mouseDown(with event: NSEvent) {
+		window?.makeFirstResponder(self)
+		let p = convert(event.locationInWindow, from: nil)
+		guard let c = cell(at: p) else { return }
+		// shift-click extends, matching the shift-arrow behaviour
+		setCursorRow(c.row, track: c.track, extending: event.modifierFlags.contains(.shift))
+	}
+
+	open override func mouseDragged(with event: NSEvent) {
+		let p = convert(event.locationInWindow, from: nil)
+		// clamp rather than bail, so dragging past the edge keeps extending
+		let track = clampTrack(Int((p.x - gutterWidth) / max(trackWidth, 1)))
+		let row = clampRow(Int((p.y - headerHeight) / rowHeight))
+		setCursorRow(row, track: track, extending: true)
+	}
+
+	open override func keyDown(with event: NSEvent) {
+		guard let chars = event.charactersIgnoringModifiers, let ch = chars.unicodeScalars.first else {
+			super.keyDown(with: event)
+			return
+		}
+		let extending = event.modifierFlags.contains(.shift)
+
+		switch Int(ch.value) {
+		case NSUpArrowFunctionKey:
+			moveCursor(dRow: -step, dTrack: 0, extending: extending)
+		case NSDownArrowFunctionKey:
+			moveCursor(dRow: step, dTrack: 0, extending: extending)
+		case NSLeftArrowFunctionKey:
+			moveCursor(dRow: 0, dTrack: -1, extending: extending)
+		case NSRightArrowFunctionKey:
+			moveCursor(dRow: 0, dTrack: 1, extending: extending)
+		case NSHomeFunctionKey:
+			setCursorRow(0, track: cursorTrack, extending: extending)
+		case NSEndFunctionKey:
+			setCursorRow(rowCount - 1, track: cursorTrack, extending: extending)
+		case NSPageUpFunctionKey:
+			moveCursor(dRow: -16, dTrack: 0, extending: extending)
+		case NSPageDownFunctionKey:
+			moveCursor(dRow: 16, dTrack: 0, extending: extending)
+		default:
+			super.keyDown(with: event)
+		}
+	}
+
+	/// Arrow movement. Tracks wrap around the pattern; rows wrap within it.
+	/// Crossing into the next pattern via the order list is not wired up yet.
+	private func moveCursor(dRow: Int, dTrack: Int, extending: Bool) {
+		guard rowCount > 0, trackCount > 0 else { return }
+		var row = cursorRow + dRow
+		var track = cursorTrack + dTrack
+
+		if track < 0 { track = trackCount - 1 }
+		if track >= trackCount { track = 0 }
+
+		if row < 0 { row += rowCount }
+		if row >= rowCount { row -= rowCount }
+
+		setCursorRow(row, track: track, extending: extending)
+	}
+
+	@objc open override func selectAll(_ sender: Any?) {
+		guard rowCount > 0, trackCount > 0 else { return }
+		anchorRow = 0
+		anchorTrack = 0
+		cursorRow = rowCount - 1
+		cursorTrack = trackCount - 1
+		needsDisplay = true
+	}
+
 	// MARK: Drawing
 
 	open override func draw(_ dirtyRect: NSRect) {
@@ -151,7 +327,22 @@ open class PatternGridView: NSView {
 		}
 
 		drawSeparators(dirtyRect)
+		drawCursor()
 		drawHeader(dirtyRect)		// last, so it stays on top when scrolled
+	}
+
+	private func drawCursor() {
+		guard rowCount > 0, trackCount > 0 else { return }
+		let r = NSRect(x: trackX(cursorTrack),
+					   y: headerHeight + CGFloat(cursorRow) * rowHeight,
+					   width: trackWidth, height: rowHeight)
+		// Solid when we hold focus, dimmed when we do not, so it stays visible
+		// without pretending to be active.
+		let focused = (window?.firstResponder === self) && (window?.isKeyWindow ?? false)
+		(focused ? cursorStroke : cursorStroke.withAlphaComponent(0.4)).setStroke()
+		let path = NSBezierPath(rect: r.insetBy(dx: 0.5, dy: 0.5))
+		path.lineWidth = 2
+		path.stroke()
 	}
 
 	private func drawPlaceholder() {
@@ -196,6 +387,13 @@ open class PatternGridView: NSView {
 				at: NSPoint(x: 3, y: band.minY + 1), withAttributes: gutterAttrs)
 
 			for track in 0..<trackCount {
+				// selection wash, drawn under the text so the notes stay legible
+				if isSelected(row: row, track: track) {
+					selectionFill.setFill()
+					NSRect(x: trackX(track), y: band.minY,
+						   width: trackWidth, height: rowHeight).fill()
+				}
+
 				let cmd = pattern.getCommand(position: Int16(row), channel: Int16(track))
 				var x = trackX(track)
 				let fields = [noteText(cmd.note), insText(cmd.instrument),
