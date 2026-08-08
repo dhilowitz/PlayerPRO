@@ -60,6 +60,9 @@
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>
+                                                                    <connections>
+                                        <action selector="togglePlayback:" target="-2" id="aB1-pl-ay0"/>
+                                    </connections>
                                 </button>
                                 <button id="3cJ-rm-kq9">
                                     <rect key="frame" x="39" y="62" width="32" height="32"/>
@@ -68,6 +71,9 @@
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>
+                                                                    <connections>
+                                        <action selector="rewindToStart:" target="-2" id="aB2-rw-nd0"/>
+                                    </connections>
                                 </button>
                                 <slider verticalHuggingPriority="750" id="oP5-bp-Z0e">
                                     <rect key="frame" x="66" y="38" width="82" height="17"/>

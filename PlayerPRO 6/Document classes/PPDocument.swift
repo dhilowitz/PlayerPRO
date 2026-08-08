@@ -16,7 +16,12 @@ import AudioToolbox
 	var instrumentList: InstrumentPanelController! = nil
 	var mainViewController: DocumentWindowController! = nil
 	@objc dynamic let theDriver: PPDriver
-	@objc dynamic private(set) var theMusic: PPMusicObject!
+	// Nothing previously assigned this to the driver: PPDriver.currentMusic
+	// stayed nil forever, so -play had nothing to play regardless of whether
+	// the transport controls were wired to it.
+	@objc dynamic private(set) var theMusic: PPMusicObject! {
+		didSet { theDriver.currentMusic = theMusic }
+	}
 	
 	@objc dynamic var musicName: String {
 		get {

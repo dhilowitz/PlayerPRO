@@ -68,7 +68,90 @@ class DocumentWindowController: NSWindowController {
 	@IBAction func showWavePreview(_ sender: AnyObject!) {
 		editorsTab.selectTabViewItem(withIdentifier: "Wave")
 	}
-	
+
+	// MARK: - Transport
+	//
+	// playButton, reverseButton and fastForwardButton existed in the nib with
+	// outlets but no action connections, and nothing ever set
+	// PPDriver.currentMusic (see PPDocument.theMusic), so pressing Play did
+	// nothing at all. fastForwardButton is still unwired -- its intended
+	// behavior (seek forward? next pattern?) isn't clear from the nib alone,
+	// so it is left alone rather than guessed at.
+
+	private var playbackTimer: Timer?
+
+	@IBAction func togglePlayback(_ sender: AnyObject!) {
+		guard let driver = currentDocument?.theDriver else { return }
+		if driver.isPlayingMusic {
+			_ = try? driver.pause()
+			stopPlaybackTimer()
+		} else {
+			_ = try? driver.play()
+			startPlaybackTimer()
+		}
+	}
+
+	@IBAction func rewindToStart(_ sender: AnyObject!) {
+		guard let driver = currentDocument?.theDriver else { return }
+		_ = try? driver.stop()
+		stopPlaybackTimer()
+		updateTransportDisplay()
+	}
+
+	private func startPlaybackTimer() {
+		playbackTimer?.invalidate()
+		playbackTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+			self?.updateTransportDisplay()
+		}
+	}
+
+	private func stopPlaybackTimer() {
+		playbackTimer?.invalidate()
+		playbackTimer = nil
+	}
+
+	private static let timeFormatter: DateComponentsFormatter = {
+		let f = DateComponentsFormatter()
+		f.allowedUnits = [.minute, .second]
+		f.zeroFormattingBehavior = .pad
+		return f
+	}()
+
+	private func updateTransportDisplay() {
+		guard let driver = currentDocument?.theDriver else { return }
+
+		var current: Int = 0, total: Int = 0
+		_ = try? driver.getMusicStatusTime(current: &current, total: &total)
+		let currentSeconds = TimeInterval(current) / 60.0
+		let totalSeconds = TimeInterval(total) / 60.0
+
+		currentTimeLabel?.stringValue = DocumentWindowController.timeFormatter.string(from: currentSeconds) ?? "00:00"
+		totalTimeLabel?.stringValue = DocumentWindowController.timeFormatter.string(from: totalSeconds) ?? "00:00"
+
+		if let slider = playbackPositionSlider {
+			slider.minValue = 0
+			slider.maxValue = max(totalSeconds, 0.01)
+			slider.doubleValue = currentSeconds
+		}
+
+		// Follow playback in the pattern grid, same as thePrefs.MusicTrace in
+		// the original. The grid only shows pattern 0 for now, so only
+		// highlight while that is the pattern actually playing.
+		if driver.patternIdentifier == 0 {
+			classicalController?.gridView.playbackRow = Int(driver.patternPosition)
+		} else {
+			classicalController?.gridView.playbackRow = -1
+		}
+
+		if !driver.isPlayingMusic {
+			stopPlaybackTimer()
+		}
+	}
+
+	deinit {
+		playbackTimer?.invalidate()
+	}
+
 	@IBAction func okayExportSettings(_ sender: AnyObject!) {
 		currentDocument.windowForSheet!.endSheet(exportWindow, returnCode: NSApplication.ModalResponse.alertFirstButtonReturn)
 		exportWindow.close()
