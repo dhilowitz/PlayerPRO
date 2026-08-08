@@ -33,7 +33,9 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	}
 	
 	@IBAction func playSample(_ sender: AnyObject!) {
-		let tag = (sender as! NSButtonCell).tag
+		// sender here is the NSButton the user clicked, not its cell -- this
+		// force-cast to NSButtonCell always failed and crashed the app.
+		guard let tag = (sender as? NSControl)?.tag else { return }
 		let sampNum = tag % Int(MAXSAMPLE)
 		let instrNum = tag / Int(MAXSAMPLE)
 		playSample(instrument: Int16(instrNum), sample: Int16(sampNum))

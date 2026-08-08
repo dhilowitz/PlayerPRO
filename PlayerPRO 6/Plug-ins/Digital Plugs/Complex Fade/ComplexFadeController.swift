@@ -49,7 +49,12 @@ class ComplexFadeController: NSWindowController {
     }
 
 	@IBAction func changeFadeType(_ sender: AnyObject!) {
-		fadeType = PPFadeType(rawValue: (sender as! NSButtonCell).tag)!
+		// The radio buttons are cells inside an NSMatrix, so sender here is the
+		// matrix itself, not a cell -- this force-cast to NSButtonCell always
+		// failed and would have crashed the app the same way playSample did.
+		guard let tag = (sender as? NSMatrix)?.selectedCell()?.tag,
+			  let newType = PPFadeType(rawValue: tag) else { return }
+		fadeType = newType
 		switch (fadeType) {
 		case .instrument:
 			valueInfo.stringValue = NSLocalizedString("From 1 to 64", bundle: Bundle(for: ComplexFadeController.self), comment: "From 1 to 64")
