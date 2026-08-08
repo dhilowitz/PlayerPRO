@@ -145,6 +145,7 @@
 		55149C621832D176009C850B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 552F12E116AE08AF00394143 /* AVFoundation.framework */; };
 		55151F7A10DEDBDB0054ABC4 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55EE8EBD100404EB00E75E63 /* CoreFoundation.framework */; };
 		5517A24519D9D4A8002D350D /* BoxViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5517A24419D9D4A8002D350D /* BoxViewController.swift */; };
+		55FA200E2DA000030000000E /* BoxGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA200D2DA000030000000D /* BoxGridView.swift */; };
 		5517DAC5180CAD61001413D0 /* ULT.ppimpexp in Copy Plug-ins */ = {isa = PBXBuildFile; fileRef = 5586881B10BF62F100FCC24D /* ULT.ppimpexp */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		5518A41A1B03E4E3005AF928 /* System 7.plugin in Copy PlugIns */ = {isa = PBXBuildFile; fileRef = 55D5E9581B01466D00EB2C84 /* System 7.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5518A4391B03F561005AF928 /* ClassicSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5518A4381B03F561005AF928 /* ClassicSound.swift */; };
@@ -2464,6 +2465,7 @@
 		55151F8010DEDBDB0054ABC4 /* XI.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XI.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		55151F8110DEDBDB0054ABC4 /* XI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "XI-Info.plist"; sourceTree = "<group>"; };
 		5517A24419D9D4A8002D350D /* BoxViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BoxViewController.swift; sourceTree = "<group>"; };
+		55FA200D2DA000030000000D /* BoxGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoxGridView.swift; sourceTree = "<group>"; };
 		5517DAC6180CAE2C001413D0 /* dls.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = dls.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		5517DAC7180CAE2C001413D0 /* dls2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = dls2.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		5517DAC8180CAE2C001413D0 /* dlsmac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = dlsmac.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -5163,6 +5165,7 @@
 			isa = PBXGroup;
 			children = (
 				5517A24419D9D4A8002D350D /* BoxViewController.swift */,
+				55FA200D2DA000030000000D /* BoxGridView.swift */,
 			);
 			path = "Box View";
 			sourceTree = "<group>";
@@ -8337,6 +8340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5517A24519D9D4A8002D350D /* BoxViewController.swift in Sources */,
+				55FA200E2DA000030000000E /* BoxGridView.swift in Sources */,
 				55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */,
 				555F5C611993327D0056AF01 /* OpenPanelViewController.swift in Sources */,
 				55852E1C18D67CCB0009BF55 /* PPSmallPianoView.m in Sources */,
