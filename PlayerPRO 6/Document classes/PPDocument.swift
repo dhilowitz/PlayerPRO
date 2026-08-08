@@ -182,6 +182,18 @@ import AudioToolbox
 	convenience init(music: PPMusicObject) {
 		self.init()
 		theMusic = music
+		// theMusic's didSet (which attaches this music to theDriver) does
+		// not fire for this assignment -- confirmed with a standalone
+		// reproduction of this exact pattern (an @objc dynamic property,
+		// set from a convenience init after self.init() has already
+		// returned): Swift silently skips the observer here. Every
+		// document created this way (a brand new untitled song, and
+		// complex-format imports via AppDelegate) never got its music
+		// attached to the driver at all, so pattern playback had nothing
+		// to play -- not a sample/instrument-import-specific bug, a
+		// document-creation one. Explicit call needed until/unless this
+		// initializer is restructured so didSet can be trusted here.
+		theDriver.currentMusic = music
 	}
 	
 	override init() {
