@@ -52,18 +52,26 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	func importSample(from sampURL: URL, makeUserSelectInstrument selIns: Bool = false) throws {
 		//TODO: handle selIns
 		let plugType: MADFourChar = try sampleImporter.identifySampleFile(sampURL)
-		var theSamp: Int16 = 0;
-		var theIns: Int16  = 0;
-		
+
+		// Used to always target instruments.first regardless of which
+		// instrument was actually selected in the outline -- importing into
+		// any slot but the very first one silently landed the new sample
+		// somewhere the user wasn't looking, which read as "nothing
+		// happened." Also never refreshed the outline/detail pane
+		// afterward, so even a first-slot import wouldn't visibly show up
+		// without deselecting and reselecting it by hand.
+		guard let targetInstrument = selectedInstrument ?? currentDocument.theMusic.instruments.first else { return }
+
 		sampleImporter.beginImportingSample(type: plugType, URL: sampURL, driver: theDriver, parentDocument: currentDocument) { (err, obj) in
 			if let err = err {
 				self.currentDocument.presentError(err)
 			} else if let obj = obj {
-				self.currentDocument.theMusic.instruments.first?.add(obj)
-			} else {
-				
+				targetInstrument.add(obj)
+				self.instrumentOutline.reloadData()
+				self.instrumentOutline.expandItem(targetInstrument)
+				self.outlineViewSelectionDidChange(Notification(name: NSOutlineView.selectionDidChangeNotification))
+				self.currentDocument.updateChangeCount(.changeDone)
 			}
-
 		}
 	}
 	
@@ -143,8 +151,77 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	}
 	
 	
+	/// Plugins currently offered by an in-flight export save panel's format
+	/// popup -- indices must line up with that popup's items. Held here,
+	/// not captured in a closure, since exportFormatPopupChanged(_:) is a
+	/// plain target/action callback.
+	private var pendingExportPlugs: [PPInstrumentImporterObject] = []
+
+	// sender is either one of the per-plugin menu items AppDelegate builds
+	// under Instruments > Export (tagged with its index into
+	// instrumentImporter, same shape as
+	// DocumentWindowController.exportMusicAs(_:)), OR InsPanel's own
+	// toolbar "Export" button (InsPanel.xib, tag -1, wired directly to this
+	// same selector with itself as sender) -- which carries no plugin
+	// choice at all. This used to only handle the first case, so the
+	// toolbar button -- the one actually reachable without digging into the
+	// menu bar, and almost certainly what was clicked to report this bug --
+	// silently did nothing.
 	@IBAction func exportInstrument(_ sender: AnyObject!) {
-		
+		guard let instrument = selectedInstrument else { return }
+
+		if let menuItem = sender as? NSMenuItem, menuItem.tag >= 0, menuItem.tag < instrumentImporter.plugInCount {
+			presentExportPanel(for: instrument, using: instrumentImporter[menuItem.tag])
+			return
+		}
+
+		let exportPlugs = instrumentImporter.filter { $0.mode == .export || $0.mode == .importExport }
+		guard !exportPlugs.isEmpty else { return }
+
+		if exportPlugs.count == 1 {
+			presentExportPanel(for: instrument, using: exportPlugs[0])
+			return
+		}
+
+		pendingExportPlugs = exportPlugs
+		let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 200, height: 25))
+		popup.addItems(withTitles: exportPlugs.map { $0.menuName })
+		popup.target = self
+		popup.action = #selector(exportFormatPopupChanged(_:))
+
+		let savePanel = NSSavePanel()
+		savePanel.accessoryView = popup
+		savePanel.nameFieldStringValue = instrument.name
+		savePanel.allowedFileTypes = exportPlugs[0].utiTypes
+
+		savePanel.beginSheetModal(for: currentDocument.windowForSheet!) { [pendingExportPlugs] result in
+			guard result == .OK, let url = savePanel.url else { return }
+			self.performExport(instrument, using: pendingExportPlugs[popup.indexOfSelectedItem], to: url)
+		}
+	}
+
+	@objc private func exportFormatPopupChanged(_ sender: NSPopUpButton) {
+		(sender.window as? NSSavePanel)?.allowedFileTypes = pendingExportPlugs[sender.indexOfSelectedItem].utiTypes
+	}
+
+	private func presentExportPanel(for instrument: PPInstrumentObject, using plug: PPInstrumentImporterObject) {
+		let savePanel = NSSavePanel()
+		savePanel.allowedFileTypes = plug.utiTypes
+		savePanel.nameFieldStringValue = instrument.name
+		savePanel.title = String(format: NSLocalizedString("Export as %@", comment: "export instrument panel title"), plug.menuName)
+
+		savePanel.beginSheetModal(for: currentDocument.windowForSheet!) { result in
+			guard result == .OK, let url = savePanel.url else { return }
+			self.performExport(instrument, using: plug, to: url)
+		}
+	}
+
+	private func performExport(_ instrument: PPInstrumentObject, using plug: PPInstrumentImporterObject, to url: URL) {
+		plug.beginExportInstrument(instrument, to: url, driver: theDriver, parentDocument: currentDocument) { error in
+			if let error = error {
+				self.currentDocument.presentError(error)
+			}
+		}
 	}
 	
 	@IBAction func deleteInstrument(_ sender: AnyObject!) {

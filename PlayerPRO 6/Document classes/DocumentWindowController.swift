@@ -73,6 +73,19 @@ class DocumentWindowController: NSWindowController {
 		currentDocument.showPiano()
 	}
 
+	// Instruments > Instruments List (MainMenu.xib, keyEquivalent "l") was
+	// always grayed out: its action, showInstrumentsList:, only existed on
+	// PlayerPRO Player's app delegate (a different target entirely), so
+	// AppKit's automatic menu validation correctly found nothing in the
+	// responder chain that answered to it and disabled the item. The
+	// instrument panel already exists per-document (PPDocument.instrumentList,
+	// shown alongside the main window since makeWindowControllers) -- it can
+	// just be behind other windows, so this brings it forward.
+	@IBAction func showInstrumentsList(_ sender: AnyObject!) {
+		currentDocument.instrumentList?.showWindow(sender)
+		currentDocument.instrumentList?.window?.makeKeyAndOrderFront(sender)
+	}
+
 	/// The piano keyboard's bridge into whichever pattern grid is currently
 	/// recording. classicalController hosts the grid despite its name -- see
 	/// the class-naming note in DIGITAL-EDITOR-SPEC.md.
