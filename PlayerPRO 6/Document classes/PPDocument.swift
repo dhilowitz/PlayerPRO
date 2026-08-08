@@ -280,8 +280,19 @@ import AudioToolbox
 		return MADNativeUTI
 	}
 	
+	// autosavesInPlace = true switches NSDocument to Apple's modern
+	// versions/autosave-in-place model (like TextEdit): background saves
+	// go through ~/Library/Autosave Information, and Save As is meant to
+	// be replaced by Duplicate/Move To/Browse All Versions. This app's
+	// menu was never built for that model -- MainMenu.xib only has classic
+	// Save/Save As/Revert wiring (saveDocumentAs:), no Duplicate or
+	// versions-browser items anywhere -- so this looks like an inherited
+	// Xcode template default rather than an intentional choice. With it on,
+	// Save As... surfaced ~/Library/Autosave Information as its directory
+	// instead of a real user-chosen location. False restores the classic
+	// explicit-save behavior the rest of the UI already assumes.
 	override class var autosavesInPlace: Bool {
-		return true
+		return false
 	}
 
 	func importMusicObject(_ theObj: PPMusicObject) {
