@@ -15,6 +15,7 @@ static void *kMusicContext = &kMusicContext;
 @interface ClassicalViewController ()
 @property (nonatomic, strong) NSScrollView *gridScrollView;
 @property (nonatomic, strong) PPPatternGridView *gridView;
+@property (nonatomic, weak) PPDocument *observedDocument;
 @end
 
 @implementation ClassicalViewController
@@ -30,16 +31,12 @@ static void *kMusicContext = &kMusicContext;
 
 - (void)dealloc
 {
-	[_currentDocument removeObserver:self forKeyPath:@"theMusic" context:kMusicContext];
+	[_observedDocument removeObserver:self forKeyPath:@"theMusic" context:kMusicContext];
 }
 
-- (void)awakeFromNib
+- (void)viewDidLoad
 {
-	[super awakeFromNib];
-
-	if (self.gridView) {
-		return;		// awakeFromNib can be sent more than once
-	}
+	[super viewDidLoad];
 
 	// The Classic tab's view arrives from the nib empty, so build the grid and
 	// its scroller here rather than in Interface Builder.
@@ -55,10 +52,40 @@ static void *kMusicContext = &kMusicContext;
 	[self.view addSubview:scroller];
 	self.gridScrollView = scroller;
 
-	[_currentDocument addObserver:self
-					   forKeyPath:@"theMusic"
-						  options:NSKeyValueObservingOptionInitial
-						  context:kMusicContext];
+	PPDocument *doc = [self resolvedDocument];
+	if (doc) {
+		[doc addObserver:self
+			  forKeyPath:@"theMusic"
+				 options:NSKeyValueObservingOptionInitial
+				 context:kMusicContext];
+		self.observedDocument = doc;
+	}
+}
+
+// The nib wires our currentDocument outlet to File's Owner, which for
+// PPDocument.xib is the DocumentWindowController rather than the document,
+// even though the property is declared PPDocument*. Rather than rely on that,
+// accept either and ask the window controller for the document when that is
+// what we were handed.
+- (PPDocument *)resolvedDocument
+{
+	id candidate = self.currentDocument;
+	if ([candidate isKindOfClass:[PPDocument class]]) {
+		return candidate;
+	}
+	if ([candidate respondsToSelector:@selector(currentDocument)]) {
+		id inner = [candidate currentDocument];
+		if ([inner isKindOfClass:[PPDocument class]]) {
+			return inner;
+		}
+	}
+	if ([candidate respondsToSelector:@selector(document)]) {
+		id inner = [candidate document];
+		if ([inner isKindOfClass:[PPDocument class]]) {
+			return inner;
+		}
+	}
+	return nil;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
@@ -73,7 +100,7 @@ static void *kMusicContext = &kMusicContext;
 
 - (void)reloadFromDocument
 {
-	PPMusicObject *music = self.currentDocument.theMusic;
+	PPMusicObject *music = [self resolvedDocument].theMusic;
 	if (!music || music.patterns.count == 0) {
 		self.gridView.pattern = nil;
 		return;
