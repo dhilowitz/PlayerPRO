@@ -178,9 +178,24 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		
 	}
 	
+	/// The instrument the outline selection currently resolves to -- either
+	/// the selected row itself, or (when a sample subrow is selected) its
+	/// owning instrument. Used to feed the piano keyboard window, which
+	/// auditions and drags notes through whichever instrument is selected
+	/// here, same as the original's "currently selected instrument" concept.
+	var selectedInstrument: PPInstrumentObject? {
+		guard let item = instrumentOutline?.item(atRow: instrumentOutline.selectedRow) else { return nil }
+		if let ins = item as? PPInstrumentObject { return ins }
+		if let samp = item as? PPSampleObject {
+			return instrumentOutline.parent(forItem: samp) as? PPInstrumentObject
+		}
+		return nil
+	}
+
 	@objc func outlineViewSelectionDidChange(_ notification: Notification) {
 		var object: AnyObject! = instrumentOutline.item(atRow: instrumentOutline.selectedRow) as AnyObject?
-		
+		currentDocument?.pianoWindow?.refreshSelectedInstrument()
+
 		func updateOutlineView(_ obj: PPSampleObject?) {
 			if obj == nil {
 				self.instrumentSize.stringValue = PPDoubleDash

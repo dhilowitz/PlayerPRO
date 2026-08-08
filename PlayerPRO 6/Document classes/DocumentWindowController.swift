@@ -69,6 +69,17 @@ class DocumentWindowController: NSWindowController {
 		editorsTab.selectTabViewItem(withIdentifier: "Wave")
 	}
 
+	@IBAction func showPiano(_ sender: AnyObject!) {
+		currentDocument.showPiano()
+	}
+
+	/// The piano keyboard's bridge into whichever pattern grid is currently
+	/// recording. classicalController hosts the grid despite its name -- see
+	/// the class-naming note in DIGITAL-EDITOR-SPEC.md.
+	func enterPianoNote(_ note: Int) {
+		classicalController?.gridView.enterNote(note)
+	}
+
 	// MARK: - Transport
 	//
 	// playButton, reverseButton and fastForwardButton existed in the nib with

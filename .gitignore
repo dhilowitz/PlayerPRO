@@ -25,3 +25,8 @@ Examples/PPPlay/PPPlay
 Examples/PPPlay/PPPlay.exe
 *.xcscmblueprint
 timeline.xctimeline
+
+# Spec documents are kept local per project instruction, not committed.
+SOFTWARE-SPEC.md
+*-EDITOR-SPEC.md
+PIANO-KEYBOARD-SPEC.md

@@ -14,6 +14,16 @@ import PlayerPROKit
 @objc(PPPatternGridView)
 open class PatternGridView: NSView {
 
+	public override init(frame frameRect: NSRect) {
+		super.init(frame: frameRect)
+		registerDragDestination()
+	}
+
+	public required init?(coder: NSCoder) {
+		super.init(coder: coder)
+		registerDragDestination()
+	}
+
 	// MARK: Content
 
 	@objc open var pattern: PPPatternObject? {
@@ -212,31 +222,8 @@ open class PatternGridView: NSView {
 
 	// MARK: Note entry
 	//
-	// The legacy editor reads its key map out of a user-editable 256-entry
-	// PianoKey[] table in preferences, so the layout below is a default rather
-	// than something fixed. It is the one PlayerPRO 5.9.8 ships with, read off
-	// its piano window: a single chromatic run across the keyboard rows rather
-	// than the two-octave split most trackers use.
-	//
-	// 9 0            -> G#2 A2
-	// q w e r t y u i o p  -> A#2 .. G3
-	// a s d f g h j k l    -> G#3 .. E4
-	// z x c v b n m        -> F4  .. B4
-	// Q W E R T            -> C5  .. E5
-
-	private static let keyToNote: [Character: Int] = {
-		let order: [Character] = ["9", "0",
-								  "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
-								  "a", "s", "d", "f", "g", "h", "j", "k", "l",
-								  "z", "x", "c", "v", "b", "n", "m",
-								  "Q", "W", "E", "R", "T"]
-		var map = [Character: Int]()
-		// "9" is G#2: octave 2, semitone 8 -> note 32
-		for (i, c) in order.enumerated() {
-			map[c] = 32 + i
-		}
-		return map
-	}()
+	// See PianoKeyMap.swift for the physical key layout, shared with the
+	// on-screen piano keyboard.
 
 	/// Typing enters notes only while this is on, as in the original. Off by
 	/// default so the grid can be navigated without editing it by accident;
@@ -263,18 +250,32 @@ open class PatternGridView: NSView {
 	@objc open var didEditPattern: (() -> Void)?
 
 	private func handleNoteKey(_ ch: Character) -> Bool {
-		guard recording, let pattern = pattern else { return false }
+		guard recording, pattern != nil else { return false }
 
 		let note: Int
 		if ch == "`" {
 			note = 0xFF				// clears the note, leaving the cell empty
-		} else if let base = PatternGridView.keyToNote[ch] {
+		} else if let base = PianoKeyMap.keyToNote[ch] {
 			let shifted = base + octaveOffset * 12
 			guard shifted >= 0 && shifted < 96 else { return false }
 			note = shifted
 		} else {
 			return false
 		}
+
+		enterNote(note)
+		return true
+	}
+
+	/// Writes an already octave-shifted note (0-95, or 0xFF to clear) at the
+	/// cursor and advances by the step, exactly as a mapped key press does.
+	/// Shared with the on-screen piano keyboard (see PianoKeyboardView's
+	/// noteEntered closure): while this grid is recording, scrubbing across
+	/// the piano lays down a sequence of notes down the pattern the same way
+	/// typing the equivalent keys in turn would, matching the original's
+	/// DigitalEditorProcess bridge.
+	@objc open func enterNote(_ note: Int) {
+		guard recording, let pattern = pattern else { return }
 
 		let row = cursorRow, track = cursorTrack
 		withUndo(NSLocalizedString("Key Press", comment: "undo name for typing a note")) {
@@ -296,7 +297,6 @@ open class PatternGridView: NSView {
 
 		// advance by the step, wrapping inside the pattern
 		moveCursor(dRow: step, dTrack: 0, extending: false)
-		return true
 	}
 
 	private func cellRect(row: Int, track: Int) -> NSRect {
@@ -498,16 +498,22 @@ open class PatternGridView: NSView {
 	/// edges rather than wrapping, so a large block near the end does not
 	/// scatter cells back to the top.
 	@objc open func paste(_ sender: Any?) {
-		guard let pattern = pattern,
-			  let data = NSPasteboard.general.data(forType: PatternGridView.pasteboardType),
-			  let block = decode(data) else { return }
+		guard let data = NSPasteboard.general.data(forType: PatternGridView.pasteboardType) else { return }
+		pasteData(data, atRow: cursorRow, track: cursorTrack)
+	}
+
+	/// Core of paste(_:), reusable for drag-and-drop: a drop's payload lives
+	/// on the drag's own pasteboard, not NSPasteboard.general, and lands at
+	/// the drop location rather than wherever the cursor currently is.
+	func pasteData(_ data: Data, atRow startRow: Int, track startTrack: Int) {
+		guard let pattern = pattern, let block = decode(data) else { return }
 
 		withUndo(NSLocalizedString("Paste", comment: "undo name")) {
 			for t in 0..<block.tracks {
-				let track = cursorTrack + t
+				let track = startTrack + t
 				guard track < trackCount else { continue }
 				for r in 0..<block.length {
-					let row = cursorRow + r
+					let row = startRow + r
 					guard row < rowCount else { continue }
 					let cell = block.cells[t * block.length + r]
 					pattern.replaceCommand(atPosition: Int16(row), channel: Int16(track), cmd: cell)
@@ -516,11 +522,38 @@ open class PatternGridView: NSView {
 		}
 
 		// select what was pasted, which is what the eye expects afterwards
-		anchorRow = cursorRow
-		anchorTrack = cursorTrack
-		cursorRow = clampRow(cursorRow + block.length - 1)
-		cursorTrack = clampTrack(cursorTrack + block.tracks - 1)
+		anchorRow = startRow
+		anchorTrack = startTrack
+		cursorRow = clampRow(startRow + block.length - 1)
+		cursorTrack = clampTrack(startTrack + block.tracks - 1)
 		needsDisplay = true
+	}
+
+	// MARK: Drag destination
+	//
+	// Accepts the same payload PianoKeyboardView drags out: a single-cell
+	// Pcmd with sentinel source coordinates. Nothing previously registered
+	// this view for drops at all, so a drag from the piano had a compatible
+	// payload but nowhere that would accept it.
+
+	private func registerDragDestination() {
+		registerForDraggedTypes([PatternGridView.pasteboardType])
+	}
+
+	open override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+		return sender.draggingPasteboard().data(forType: PatternGridView.pasteboardType) != nil ? .copy : []
+	}
+
+	open override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+		return sender.draggingPasteboard().data(forType: PatternGridView.pasteboardType) != nil ? .copy : []
+	}
+
+	open override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+		guard let data = sender.draggingPasteboard().data(forType: PatternGridView.pasteboardType) else { return false }
+		let p = convert(sender.draggingLocation(), from: nil)
+		guard let dropCell = cell(at: p) else { return false }
+		pasteData(data, atRow: dropCell.row, track: dropCell.track)
+		return true
 	}
 
 	// MARK: Input

@@ -866,6 +866,9 @@
 		55FEF84519844FD600D2E79C /* DigitalViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FEF84419844FD600D2E79C /* DigitalViewController.m */; };
 		55FEF84B1984506C00D2E79C /* ClassicalViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FEF84A1984506C00D2E79C /* ClassicalViewController.m */; };
 		55FA10022DA0000200000002 /* PatternGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA10012DA0000200000001 /* PatternGridView.swift */; };
+		55FA20022DA0000300000002 /* PianoKeyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20012DA0000300000001 /* PianoKeyMap.swift */; };
+		55FA20042DA0000300000004 /* PianoKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20032DA0000300000003 /* PianoKeyboardView.swift */; };
+		55FA20062DA0000300000006 /* PianoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20052DA0000300000005 /* PianoWindowController.swift */; };
 		55FEF84F1984509400D2E79C /* WaveViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 55FEF84E1984509400D2E79C /* WaveViewController.m */; };
 /* End PBXBuildFile section */
 
@@ -3006,6 +3009,9 @@
 		55FEF8491984506C00D2E79C /* ClassicalViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClassicalViewController.h; sourceTree = "<group>"; };
 		55FEF84A1984506C00D2E79C /* ClassicalViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClassicalViewController.m; sourceTree = "<group>"; };
 		55FA10012DA0000200000001 /* PatternGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternGridView.swift; sourceTree = "<group>"; };
+		55FA20012DA0000300000001 /* PianoKeyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyMap.swift; sourceTree = "<group>"; };
+		55FA20032DA0000300000003 /* PianoKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyboardView.swift; sourceTree = "<group>"; };
+		55FA20052DA0000300000005 /* PianoWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoWindowController.swift; sourceTree = "<group>"; };
 		55FEF84D1984509400D2E79C /* WaveViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveViewController.h; sourceTree = "<group>"; };
 		55FEF84E1984509400D2E79C /* WaveViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WaveViewController.m; sourceTree = "<group>"; };
 		88E0C3C40C2F21DD00D6C081 /* MADFileUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MADFileUtils.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -5160,6 +5166,9 @@
 				55FEF8491984506C00D2E79C /* ClassicalViewController.h */,
 				55FEF84A1984506C00D2E79C /* ClassicalViewController.m */,
 				55FA10012DA0000200000001 /* PatternGridView.swift */,
+				55FA20012DA0000300000001 /* PianoKeyMap.swift */,
+				55FA20032DA0000300000003 /* PianoKeyboardView.swift */,
+				55FA20052DA0000300000005 /* PianoWindowController.swift */,
 			);
 			path = "Classical View";
 			sourceTree = "<group>";
@@ -8358,6 +8367,9 @@
 				5547DA5619A5690E0014A620 /* Preferences.swift in Sources */,
 				55FEF84B1984506C00D2E79C /* ClassicalViewController.m in Sources */,
 				55FA10022DA0000200000002 /* PatternGridView.swift in Sources */,
+				55FA20022DA0000300000002 /* PianoKeyMap.swift in Sources */,
+				55FA20042DA0000300000004 /* PianoKeyboardView.swift in Sources */,
+				55FA20062DA0000300000006 /* PianoWindowController.swift in Sources */,
 				5587F0491C30EDB6002EFCCE /* DigitalPlugInObject.swift in Sources */,
 				552A662916B5EBEC007C63F7 /* PPPlugInObject.m in Sources */,
 				552581FE16C6FC350016A31C /* InstrumentInfoController.m in Sources */,

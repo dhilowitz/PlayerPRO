@@ -15,6 +15,10 @@ import AudioToolbox
 @objc(PPDocument) class PPDocument: NSDocument {	
 	var instrumentList: InstrumentPanelController! = nil
 	var mainViewController: DocumentWindowController! = nil
+	// Created lazily, on first use of the Piano menu item -- unlike
+	// instrumentList, there is no reason for this window to always be open
+	// alongside the document.
+	var pianoWindow: PianoWindowController?
 	@objc dynamic let theDriver: PPDriver
 	// Nothing previously assigned this to the driver: PPDriver.currentMusic
 	// stayed nil forever, so -play had nothing to play regardless of whether
@@ -111,6 +115,23 @@ import AudioToolbox
 			}
 			insWindow.setFrameOrigin(origin)
 		}
+	}
+
+	/// Shows this document's piano keyboard window, creating it on first use.
+	func showPiano() {
+		let piano: PianoWindowController
+		if let existing = pianoWindow {
+			piano = existing
+		} else {
+			piano = PianoWindowController()
+			piano.currentDocument = self
+			piano.noteEntered = { [weak self] note in
+				self?.mainViewController.enterPianoNote(note)
+			}
+			pianoWindow = piano
+		}
+		piano.showWindow(self)
+		piano.window?.makeKeyAndOrderFront(self)
 	}
 
 	private func resetPlayerPRODriver() {
