@@ -160,7 +160,18 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	}
 	
 	@IBAction func toggleInfo(_ sender: AnyObject!) {
-		
+		// The "Waveform" toolbar item (InsPanel.xib) has never had an action
+		// wired to it, and this method has always been empty, so the drawer
+		// holding waveFormImage and the sample detail fields had no way to
+		// open at all.
+		guard let drawer = infoDrawer else { return }
+		// NSDrawer.state bridges to a raw Int, not an enum: NSDrawerState is
+		// closed=0, opening=1, open=2, closing=3.
+		if drawer.state == 1 || drawer.state == 2 {
+			drawer.close()
+		} else {
+			drawer.open()
+		}
 	}
 	
 	@IBAction func deleteSample(_ sender: AnyObject!) {

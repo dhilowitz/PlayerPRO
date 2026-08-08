@@ -178,7 +178,11 @@
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="C79D7EC4-DA64-4E47-BC52-9FD843EB20C5" label="New" paletteLabel="New Instrument" tag="-1" image="NSAddTemplate" id="p9L-aO-Ssj"/>
                     <toolbarItem implicitItemIdentifier="438694D1-78A1-4987-9A1B-29EA375C4D15" label="Delete" paletteLabel="Delete Sample" tag="-1" image="NSTrashEmpty" id="8Wm-ZP-tBs"/>
-                    <toolbarItem implicitItemIdentifier="5C017FBB-A861-4B9D-AEA6-3EAEA668DA70" label="Waveform" paletteLabel="Show Waveform" tag="-1" id="XgR-1p-9f9"/>
+                    <toolbarItem implicitItemIdentifier="5C017FBB-A861-4B9D-AEA6-3EAEA668DA70" label="Waveform" paletteLabel="Show Waveform" tag="-1" id="XgR-1p-9f9">
+                        <connections>
+                            <action selector="toggleInfo:" target="-2" id="wF3-tg-Rvm"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="BA8D706B-FDF3-4DC6-A7FC-545B7AE63C00" label="Play" paletteLabel="Play Sample" tag="-1" image="PPPlay" id="xq3-Hx-lFI"/>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
