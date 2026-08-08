@@ -412,6 +412,117 @@ open class PatternGridView: NSView {
 		setNeedsDisplay(selectionRect())
 	}
 
+	// MARK: Clipboard
+	//
+	// The unit is a rectangle, as Pcmd is in the original: a block carrying its
+	// own track count and length rather than a flat list of cells. A copy also
+	// goes onto the pasteboard as tab-separated text, which is what makes
+	// pattern data pasteable into a text editor and back.
+
+	@objc public static let pasteboardType = NSPasteboard.PasteboardType("com.quadmation.playerpro.pcmd")
+
+	private struct Block {
+		var tracks: Int
+		var length: Int
+		var cells: [Cmd]		// track-major, matching the engine's layout
+	}
+
+	private func encode(_ block: Block) -> Data {
+		var out = Data()
+		let header = [Int32(block.tracks), Int32(block.length)]
+		header.withUnsafeBytes { out.append(contentsOf: $0) }
+		for var c in block.cells {
+			withUnsafeBytes(of: &c) { out.append(contentsOf: $0) }
+		}
+		return out
+	}
+
+	private func decode(_ data: Data) -> Block? {
+		let headerSize = MemoryLayout<Int32>.size * 2
+		let cellSize = MemoryLayout<Cmd>.size
+		guard data.count >= headerSize else { return nil }
+		let tracks = Int(data.withUnsafeBytes { $0.load(fromByteOffset: 0, as: Int32.self) })
+		let length = Int(data.withUnsafeBytes { $0.load(fromByteOffset: 4, as: Int32.self) })
+		guard tracks > 0, length > 0,
+			  data.count >= headerSize + tracks * length * cellSize else { return nil }
+		var cells = [Cmd]()
+		cells.reserveCapacity(tracks * length)
+		for i in 0..<(tracks * length) {
+			let off = headerSize + i * cellSize
+			cells.append(data.withUnsafeBytes { $0.load(fromByteOffset: off, as: Cmd.self) })
+		}
+		return Block(tracks: tracks, length: length, cells: cells)
+	}
+
+	private func selectionAsText(_ block: Block) -> String {
+		var lines = [String]()
+		for row in 0..<block.length {
+			var fields = [String]()
+			for track in 0..<block.tracks {
+				let c = block.cells[track * block.length + row]
+				fields.append("\(noteText(c.note)) \(insText(c.ins)) \(volText(c.vol)) "
+							  + "\(effText(MADByte(c.cmd.rawValue)))\(argText(c.arg))")
+			}
+			lines.append(fields.joined(separator: "\t"))
+		}
+		return lines.joined(separator: "\n")
+	}
+
+	private func currentSelectionBlock() -> Block? {
+		guard let pattern = pattern else { return nil }
+		let rows = selectedRowRange, tracks = selectedTrackRange
+		var cells = [Cmd]()
+		cells.reserveCapacity(rows.length * tracks.length)
+		for track in tracks.location..<(tracks.location + tracks.length) {
+			for row in rows.location..<(rows.location + rows.length) {
+				cells.append(pattern.getCommand(position: Int16(row), channel: Int16(track)).theCommand)
+			}
+		}
+		return Block(tracks: tracks.length, length: rows.length, cells: cells)
+	}
+
+	@objc open func copy(_ sender: Any?) {
+		guard let block = currentSelectionBlock() else { return }
+		let pb = NSPasteboard.general
+		pb.clearContents()
+		pb.setData(encode(block), forType: PatternGridView.pasteboardType)
+		pb.setString(selectionAsText(block), forType: .string)
+	}
+
+	@objc open func cut(_ sender: Any?) {
+		copy(sender)
+		deleteSelection()
+	}
+
+	/// Paste with the cursor as the top-left corner, clipped at the pattern's
+	/// edges rather than wrapping, so a large block near the end does not
+	/// scatter cells back to the top.
+	@objc open func paste(_ sender: Any?) {
+		guard let pattern = pattern,
+			  let data = NSPasteboard.general.data(forType: PatternGridView.pasteboardType),
+			  let block = decode(data) else { return }
+
+		withUndo(NSLocalizedString("Paste", comment: "undo name")) {
+			for t in 0..<block.tracks {
+				let track = cursorTrack + t
+				guard track < trackCount else { continue }
+				for r in 0..<block.length {
+					let row = cursorRow + r
+					guard row < rowCount else { continue }
+					let cell = block.cells[t * block.length + r]
+					pattern.replaceCommand(atPosition: Int16(row), channel: Int16(track), cmd: cell)
+				}
+			}
+		}
+
+		// select what was pasted, which is what the eye expects afterwards
+		anchorRow = cursorRow
+		anchorTrack = cursorTrack
+		cursorRow = clampRow(cursorRow + block.length - 1)
+		cursorTrack = clampTrack(cursorTrack + block.tracks - 1)
+		needsDisplay = true
+	}
+
 	// MARK: Input
 
 	open override var acceptsFirstResponder: Bool {
