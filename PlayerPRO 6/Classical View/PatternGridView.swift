@@ -210,6 +210,99 @@ open class PatternGridView: NSView {
 		return arg == 0 ? "··" : String(format: "%02X", Int(arg))
 	}
 
+	// MARK: Note entry
+	//
+	// The legacy editor reads its key map out of a user-editable 256-entry
+	// PianoKey[] table in preferences, so the layout below is a default rather
+	// than something fixed. It is the one PlayerPRO 5.9.8 ships with, read off
+	// its piano window: a single chromatic run across the keyboard rows rather
+	// than the two-octave split most trackers use.
+	//
+	// 9 0            -> G#2 A2
+	// q w e r t y u i o p  -> A#2 .. G3
+	// a s d f g h j k l    -> G#3 .. E4
+	// z x c v b n m        -> F4  .. B4
+	// Q W E R T            -> C5  .. E5
+
+	private static let keyToNote: [Character: Int] = {
+		let order: [Character] = ["9", "0",
+								  "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
+								  "a", "s", "d", "f", "g", "h", "j", "k", "l",
+								  "z", "x", "c", "v", "b", "n", "m",
+								  "Q", "W", "E", "R", "T"]
+		var map = [Character: Int]()
+		// "9" is G#2: octave 2, semitone 8 -> note 32
+		for (i, c) in order.enumerated() {
+			map[c] = 32 + i
+		}
+		return map
+	}()
+
+	/// Typing enters notes only while this is on. The original gates it behind
+	/// a record button; there is no such button yet, so it defaults to on.
+	@objc open var recording: Bool = true
+
+	/// Whole-octave shift applied to every typed note, as pianoOffset does.
+	@objc open var octaveOffset: Int = 0
+
+	/// Values stamped alongside a typed note, each with its own toggle. The
+	/// original shows these as a checkbox plus a value per field, with only
+	/// the instrument enabled by default.
+	@objc open var writesInstrument: Bool = true
+	@objc open var defaultInstrument: UInt8 = 1
+	@objc open var writesEffect: Bool = false
+	@objc open var defaultEffect: UInt8 = 0
+	@objc open var writesArgument: Bool = false
+	@objc open var defaultArgument: UInt8 = 0
+	@objc open var writesVolume: Bool = false
+	@objc open var defaultVolume: UInt8 = 0
+
+	/// Called after a note is written, so the controller can mark the document
+	/// dirty and register undo.
+	@objc open var didEditPattern: (() -> Void)?
+
+	private func handleNoteKey(_ ch: Character) -> Bool {
+		guard recording, let pattern = pattern else { return false }
+
+		let note: Int
+		if ch == "`" {
+			note = 0xFF				// clears the note, leaving the cell empty
+		} else if let base = PatternGridView.keyToNote[ch] {
+			let shifted = base + octaveOffset * 12
+			guard shifted >= 0 && shifted < 96 else { return false }
+			note = shifted
+		} else {
+			return false
+		}
+
+		let row = cursorRow, track = cursorTrack
+		pattern.modifyCommand(atPosition: Int16(row), channel: Int16(track)) { cmd in
+			cmd.pointee.note = MADByte(note)
+			if self.writesInstrument { cmd.pointee.ins = self.defaultInstrument }
+			if self.writesEffect, let eff = MADEffectID(rawValue: self.defaultEffect) {
+				cmd.pointee.cmd = eff
+			}
+			if self.writesArgument   { cmd.pointee.arg = self.defaultArgument }
+			if self.writesVolume {
+				// a default of 0 means "no volume command", not volume zero
+				cmd.pointee.vol = self.defaultVolume == 0 ? 0xFF : self.defaultVolume
+			}
+		}
+
+		setNeedsDisplay(cellRect(row: row, track: track))
+		didEditPattern?()
+
+		// advance by the step, wrapping inside the pattern
+		moveCursor(dRow: step, dTrack: 0, extending: false)
+		return true
+	}
+
+	private func cellRect(row: Int, track: Int) -> NSRect {
+		return NSRect(x: trackX(track),
+					  y: headerHeight + CGFloat(row) * rowHeight,
+					  width: trackWidth, height: rowHeight)
+	}
+
 	// MARK: Input
 
 	open override var acceptsFirstResponder: Bool {
@@ -280,6 +373,11 @@ open class PatternGridView: NSView {
 		case NSPageDownFunctionKey:
 			moveCursor(dRow: 16, dTrack: 0, extending: extending)
 		default:
+			// note entry uses the shifted characters, so read them with
+			// modifiers applied rather than charactersIgnoringModifiers
+			if let typed = event.characters?.first, handleNoteKey(typed) {
+				return
+			}
 			super.keyDown(with: event)
 		}
 	}
