@@ -374,12 +374,18 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 	if (!_instruments) {
 		NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:MAXINSTRU];
 		for (NSInteger i = 0; i < MAXINSTRU; i++) {
-			PPInstrumentObject *immIns = [[PPInstrumentObject alloc] initWithMusicStruct:currentMusic atIndex:i];
+			// -initWithMusicStruct:atIndex: takes a raw MADMusic* and never
+			// stores it anywhere, so instruments vended this way have no way
+			// to reach the struct again later: -addSamplesObject:'s writeback
+			// of the new sample into music->sample[] silently no-oped behind
+			// an "if (_theMus)" that was never true. -initWithMusic:
+			// instrumentIndex: does identical setup but also wires _theMus.
+			PPInstrumentObject *immIns = [[PPInstrumentObject alloc] initWithMusic:self instrumentIndex:i];
 			[array addObject:immIns];
 		}
 		_instruments = array;
 	}
-	
+
 	return _instruments;
 }
 

@@ -649,6 +649,11 @@ static const dispatch_block_t initUTIArray = ^{
 		theInstrument.no = number = -1;
 		theInstrument.firstSample = 0;
 		MADResetInstrument(&theInstrument);
+		// writebackAddr must be valid before -setName: runs, since it writes
+		// through writebackAddr->name; it defaults to NULL on a freshly
+		// alloc'd object, so this order crashed unconditionally every time
+		// this initializer was reached, via a NULL strlcpy destination.
+		writebackAddr = &theInstrument;
 		self.name = @"";
 		_panningEnvelope = [[NSMutableArray alloc] initWithCapacity:12];
 		_volumeEnvelope = [[NSMutableArray alloc] initWithCapacity:12];
@@ -658,7 +663,6 @@ static const dispatch_block_t initUTIArray = ^{
 			[_volumeEnvelope addObject:[PPEnvelopeObject new]];
 			[_pitchEnvelope addObject:[PPEnvelopeObject new]];
 		}
-		writebackAddr = &theInstrument;
 	}
 	return self;
 }
@@ -746,7 +750,18 @@ static const dispatch_block_t initUTIArray = ^{
 	[samples addObject:object];
 	writebackAddr->numSamples++;
 	if (_theMus) {
-		//TODO: copy sample data over
+		// numSamples above is what MADMusicSaveCFURL trusts to know how many
+		// sample slots to write out for this instrument; leaving the actual
+		// pointer at music->sample[firstSample + index] unset left it NULL
+		// while numSamples claimed a sample was there, so saving any music
+		// with a freshly-imported sample crashed dereferencing that NULL.
+		NSInteger slot = writebackAddr->firstSample + object.sampleIndex;
+		sData *existing = _theMus._currentMusic->sample[slot];
+		if (existing) {
+			free(existing->data);
+			free(existing);
+		}
+		_theMus._currentMusic->sample[slot] = [object createSData];
 	}
 }
 
