@@ -197,14 +197,36 @@ static const dispatch_block_t initUTIArray = ^{
 	return self.commands[(self.patternSize * TrackIdX) + PosX];
 }
 
+// The commands array is a wrapper over the music's pattern data, not a copy of
+// record. Writing only to the array leaves the MADMusic struct untouched, so
+// the edit is invisible to playback and is lost on save. Mirror every write
+// into the struct, using the same (size * track + position) index the engine's
+// GetMADCommand uses.
+- (void)writeThroughCommand:(Cmd)aCmd position:(short)PosX channel:(short)TrackIdX
+{
+	if (index < 0 || !_musicWrapper) {
+		return;		// pattern not backed by a music struct
+	}
+	MADMusic *mus = _musicWrapper._currentMusic;
+	if (!mus || !mus->partition[index]) {
+		return;
+	}
+	PatData *pat = mus->partition[index];
+	if (TrackIdX < 0 || TrackIdX >= mus->header->numChn) {
+		return;
+	}
+	pat->Cmds[(pat->header.size * TrackIdX) + PosX] = aCmd;
+}
+
 - (void)replaceCommandAtPosition:(short)PosX channel:(short)TrackIdX cmd:(Cmd)aCmd
 {
 	if (PosX < 0)
 		PosX = 0;
 	else if (PosX >= self.patternSize)
 		PosX = self.patternSize - 1;
-	
+
 	self.commands[(self.patternSize * TrackIdX) + PosX] = [[PPMadCommandObject alloc] initWithCmd:aCmd];
+	[self writeThroughCommand:aCmd position:PosX channel:TrackIdX];
 }
 
 - (void)replaceCommandAtPosition:(short)PosX channel:(short)TrackIdX command:(PPMadCommandObject*)aCmd
@@ -213,8 +235,9 @@ static const dispatch_block_t initUTIArray = ^{
 		PosX = 0;
 	else if (PosX >= self.patternSize)
 		PosX = self.patternSize - 1;
-	
+
 	self.commands[(self.patternSize * TrackIdX) + PosX] = [aCmd copy];
+	[self writeThroughCommand:aCmd.theCommand position:PosX channel:TrackIdX];
 }
 
 - (void)modifyCommandAtPosition:(short)PosX channel:(short)TrackIdX commandBlock:(void (^)(Cmd*))block
