@@ -34,7 +34,8 @@ final class DigitalPlugInObject : PPPlugInObject {
 		
 		var hasArch = false
 		for arch in archs {
-			if arch.intValue == NSBundleExecutableArchitectureX86_64 {
+			if arch.intValue == NSBundleExecutableArchitectureX86_64
+				|| arch.intValue == NSBundleExecutableArchitectureARM64 {
 				hasArch = true
 				break
 			}

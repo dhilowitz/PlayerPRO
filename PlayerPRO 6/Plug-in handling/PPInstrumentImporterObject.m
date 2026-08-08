@@ -114,7 +114,8 @@ PPInstrumentImporterCompatObject *tryOldAPI(NSBundle *theBundle)
 			NSArray *archs = tempBundle.executableArchitectures;
 			BOOL hasArch = NO;
 			for (NSNumber *arch in archs) {
-				if ([arch isEqual:@(NSBundleExecutableArchitectureX86_64)]) {
+				if ([arch isEqual:@(NSBundleExecutableArchitectureX86_64)] ||
+					[arch isEqual:@(NSBundleExecutableArchitectureARM64)]) {
 					hasArch = YES;
 					break;
 				}

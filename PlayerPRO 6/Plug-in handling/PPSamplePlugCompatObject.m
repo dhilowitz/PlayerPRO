@@ -69,7 +69,8 @@
 	BOOL has32 = NO, has64 = NO;
 	NSArray *archs = tempBundle.executableArchitectures;
 	for (NSNumber *arch in archs) {
-		if ([arch isEqual:@(NSBundleExecutableArchitectureX86_64)]) {
+		if ([arch isEqual:@(NSBundleExecutableArchitectureX86_64)] ||
+			[arch isEqual:@(NSBundleExecutableArchitectureARM64)]) {
 			has64 = YES;
 		} else if ([arch isEqual:@(NSBundleExecutableArchitectureI386)]) {
 			has32 = YES;
