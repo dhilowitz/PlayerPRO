@@ -669,6 +669,43 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 	return DeepCopyMusic(currentMusic);
 }
 
+- (NSInteger)orderListLength
+{
+	return currentMusic->header->numPointers;
+}
+
+- (void)setOrderListLength:(NSInteger)orderListLength
+{
+	// numPointers is a MADByte (UInt8, max 255) -- clamping to 256 (as the
+	// original's own equivalent guard does, e.g. Partition.c's
+	// `if (numPointers > 256) numPointers = 256`) overflows on assignment
+	// and silently wraps to 0. Confirmed the hard way: a standalone
+	// reproduction storing 999 here read back 0, not 256, until this was
+	// changed to clamp at the type's actual max.
+	if (orderListLength < 1) {
+		orderListLength = 1;
+	} else if (orderListLength > 255) {
+		orderListLength = 255;
+	}
+	currentMusic->header->numPointers = (MADByte)orderListLength;
+}
+
+- (MADByte)patternIDAtOrderListPosition:(NSInteger)index
+{
+	if (index < 0 || index >= 256) {
+		return 0;
+	}
+	return currentMusic->header->oPointers[index];
+}
+
+- (void)setPatternID:(MADByte)patternID atOrderListPosition:(NSInteger)index
+{
+	if (index < 0 || index >= 256) {
+		return;
+	}
+	currentMusic->header->oPointers[index] = patternID;
+}
+
 - (MADMusic *)internalMadMusicStruct
 {
 	return currentMusic;

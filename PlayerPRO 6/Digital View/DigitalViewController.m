@@ -35,6 +35,7 @@ static void *kClassicMusicContext = &kClassicMusicContext;
 - (void)dealloc
 {
 	[_observedDocument removeObserver:self forKeyPath:@"theMusic" context:kClassicMusicContext];
+	[_observedDocument removeObserver:self forKeyPath:@"currentPatternID" context:kClassicMusicContext];
 }
 
 - (void)viewDidLoad
@@ -67,6 +68,10 @@ static void *kClassicMusicContext = &kClassicMusicContext;
 		[doc addObserver:self
 			  forKeyPath:@"theMusic"
 				 options:NSKeyValueObservingOptionInitial
+				 context:kClassicMusicContext];
+		[doc addObserver:self
+			  forKeyPath:@"currentPatternID"
+				 options:0
 				 context:kClassicMusicContext];
 		self.observedDocument = doc;
 	}
@@ -192,8 +197,13 @@ static void *kClassicMusicContext = &kClassicMusicContext;
 		return;
 	}
 
+	NSInteger patternID = doc.currentPatternID;
+	if (patternID < 0 || patternID >= (NSInteger)music.patterns.count) {
+		patternID = 0;
+	}
+
 	self.gridView.trackCount = MAX(1, (NSInteger)music.totalTracks);
-	self.gridView.pattern = music.patterns[0];
+	self.gridView.pattern = music.patterns[patternID];
 	self.gridView.driver = doc.theDriver;
 
 	[self rebuildTrackPopup:(NSInteger)music.totalTracks];

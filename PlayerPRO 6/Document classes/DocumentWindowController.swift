@@ -86,6 +86,12 @@ class DocumentWindowController: NSWindowController {
 		currentDocument.instrumentList?.window?.makeKeyAndOrderFront(sender)
 	}
 
+	// Patterns > Partition List (MainMenu.xib) -- the order-list window,
+	// see PatternListWindowController and PATTERN-LIST-SPEC.md.
+	@IBAction func showPatternList(_ sender: AnyObject!) {
+		currentDocument.showPatternList()
+	}
+
 	/// The piano keyboard's bridge into whichever pattern grid is currently
 	/// recording. classicalController hosts the grid despite its name -- see
 	/// the class-naming note in DIGITAL-EDITOR-SPEC.md.
@@ -167,9 +173,12 @@ class DocumentWindowController: NSWindowController {
 		}
 
 		// Follow playback in the pattern grid, same as thePrefs.MusicTrace in
-		// the original. The grid only shows pattern 0 for now, so only
-		// highlight while that is the pattern actually playing.
-		if driver.patternIdentifier == 0 {
+		// the original. Used to hardcode against pattern 0, the only one
+		// any editor could ever show; now checks against whichever pattern
+		// the Pattern List window last selected (PPDocument.currentPatternID),
+		// so the playhead only highlights while that's actually the
+		// pattern playing.
+		if driver.patternIdentifier == Int16(currentDocument?.currentPatternID ?? 0) {
 			classicalController?.gridView.playbackRow = Int(driver.patternPosition)
 			digitalController?.gridView.playbackRow = Int(driver.patternPosition)
 			boxController?.gridView?.playbackRow = Int(driver.patternPosition)
@@ -178,6 +187,11 @@ class DocumentWindowController: NSWindowController {
 			digitalController?.gridView.playbackRow = -1
 			boxController?.gridView?.playbackRow = -1
 		}
+
+		// If the Pattern List window is open, keep its selection following
+		// the transport too -- matches the original's SelectCurrentParti,
+		// which polled MADDriver->PL every idle tick.
+		currentDocument?.patternListWindow?.selectRow(forCurrentPosition: true)
 
 		if !driver.isPlayingMusic {
 			stopPlaybackTimer()

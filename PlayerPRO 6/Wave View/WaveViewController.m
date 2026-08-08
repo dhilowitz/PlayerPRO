@@ -34,6 +34,7 @@ static void *kWaveMusicContext = &kWaveMusicContext;
 - (void)dealloc
 {
 	[_observedDocument removeObserver:self forKeyPath:@"theMusic" context:kWaveMusicContext];
+	[_observedDocument removeObserver:self forKeyPath:@"currentPatternID" context:kWaveMusicContext];
 }
 
 - (void)viewDidLoad
@@ -71,6 +72,10 @@ static void *kWaveMusicContext = &kWaveMusicContext;
 		[doc addObserver:self
 			  forKeyPath:@"theMusic"
 				 options:NSKeyValueObservingOptionInitial
+				 context:kWaveMusicContext];
+		[doc addObserver:self
+			  forKeyPath:@"currentPatternID"
+				 options:0
 				 context:kWaveMusicContext];
 		self.observedDocument = doc;
 	}
@@ -187,9 +192,14 @@ static void *kWaveMusicContext = &kWaveMusicContext;
 		return;
 	}
 
+	NSInteger patternID = doc.currentPatternID;
+	if (patternID < 0 || patternID >= (NSInteger)music.patterns.count) {
+		patternID = 0;
+	}
+
 	self.gridView.trackCount = MAX(1, (NSInteger)music.totalTracks);
 	self.gridView.music = music;
-	self.gridView.pattern = music.patterns[0];
+	self.gridView.pattern = music.patterns[patternID];
 	self.gridView.driver = doc.theDriver;
 }
 

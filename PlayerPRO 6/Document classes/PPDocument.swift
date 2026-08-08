@@ -24,6 +24,8 @@ import AudioToolbox
 	// instrumentList, there is no reason for this window to always be open
 	// alongside the document.
 	var pianoWindow: PianoWindowController?
+	// Same lazy-creation reasoning as pianoWindow.
+	var patternListWindow: PatternListWindowController?
 	@objc dynamic let theDriver: PPDriver
 	// Nothing previously assigned this to the driver: PPDriver.currentMusic
 	// stayed nil forever, so -play had nothing to play regardless of whether
@@ -31,7 +33,18 @@ import AudioToolbox
 	@objc dynamic private(set) var theMusic: PPMusicObject! {
 		didSet { theDriver.currentMusic = theMusic }
 	}
-	
+
+	// Which pattern (an ID -- an index into theMusic.patterns) the four
+	// pattern editors currently display. Every editor in this port used to
+	// hardcode music.patterns[0] -- there was nowhere else to get a
+	// pattern number from, since nothing built the Pattern List window
+	// that's supposed to be the actual way to navigate a song's
+	// structure. @objc dynamic so each editor's existing KVO observer on
+	// theMusic (already used to reload when the document's music object
+	// itself changes) can observe this the same way.
+	@objc dynamic var currentPatternID: Int = 0
+
+
 	@objc dynamic var musicName: String {
 		get {
 			return theMusic.title
@@ -137,6 +150,22 @@ import AudioToolbox
 		}
 		piano.showWindow(self)
 		piano.window?.makeKeyAndOrderFront(self)
+	}
+
+	/// Shows this document's pattern (order) list window, creating it on
+	/// first use.
+	func showPatternList() {
+		let list: PatternListWindowController
+		if let existing = patternListWindow {
+			list = existing
+		} else {
+			list = PatternListWindowController()
+			list.currentDocument = self
+			patternListWindow = list
+		}
+		list.reload()
+		list.showWindow(self)
+		list.window?.makeKeyAndOrderFront(self)
 	}
 
 	private func resetPlayerPRODriver() {

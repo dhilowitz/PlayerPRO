@@ -97,6 +97,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly) MADMusic *internalMadMusicStruct NS_RETURNS_INNER_POINTER;
 
+/// The order list: how many of the up-to-256 order-list positions are
+/// part of the active playback sequence -- distinct from the number of
+/// defined patterns (-countOfPatterns). A position holds a pattern ID,
+/// which can repeat across positions or skip patterns entirely; nothing
+/// about the order list changes what patterns exist, only what order (and
+/// how often) they play in.
+@property (nonatomic) NSInteger orderListLength;
+
+/// The pattern ID (an index into -patterns) that order-list position
+/// `index` currently points at. Valid range for `index` is 0..<256, the
+/// same practical limit CreatePartiWindow's original UI enforced on
+/// numPointers (oPointers itself is allocated for MAXPOINTER == 999, a
+/// generous over-allocation, not a supported range).
+- (MADByte)patternIDAtOrderListPosition:(NSInteger)index;
+- (void)setPatternID:(MADByte)patternID atOrderListPosition:(NSInteger)index NS_SWIFT_NAME(setPatternID(_:atOrderListPosition:));
+
 - (MADErr)exportInstrumentListToURL:(NSURL*)outURL;
 - (BOOL)addInstrument:(PPInstrumentObject*)theIns;
 - (BOOL)importInstrumentListFromURL:(NSURL *)insURL error:(out NSError * __nullable __autoreleasing*__nullable)theErr;

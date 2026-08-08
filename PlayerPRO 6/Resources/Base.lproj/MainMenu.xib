@@ -372,6 +372,9 @@
                         <items>
                             <menuItem title="Partition List" id="1010">
                                 <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showPatternList:" target="-1" id="ppk-p1-lst"/>
+                                </connections>
                             </menuItem>
                             <menuItem title="Patterns List" id="1009">
                                 <modifierMask key="keyEquivalentModifierMask"/>

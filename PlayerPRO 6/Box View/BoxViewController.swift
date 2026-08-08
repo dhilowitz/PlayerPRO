@@ -24,6 +24,7 @@ class BoxViewController: NSViewController {
 
 	deinit {
 		observedDocument?.removeObserver(self, forKeyPath: "theMusic", context: &BoxViewController.musicContext)
+		observedDocument?.removeObserver(self, forKeyPath: "currentPatternID", context: &BoxViewController.musicContext)
 	}
 
     @available(OSX 10.10, *)
@@ -52,6 +53,7 @@ class BoxViewController: NSViewController {
 
 		if let doc = resolvedDocument() {
 			doc.addObserver(self, forKeyPath: "theMusic", options: [.initial], context: &BoxViewController.musicContext)
+			doc.addObserver(self, forKeyPath: "currentPatternID", options: [], context: &BoxViewController.musicContext)
 			observedDocument = doc
 		}
     }
@@ -183,10 +185,15 @@ class BoxViewController: NSViewController {
 			return
 		}
 
+		var patternID = doc.currentPatternID
+		if patternID < 0 || patternID >= music.patterns.count {
+			patternID = 0
+		}
+
 		gridView.editUndoManager = doc.undoManager
 		gridView.trackCount = max(1, music.totalTracks)
 		gridView.music = music
-		gridView.pattern = (music.patterns[0] as! PPPatternObject)
+		gridView.pattern = (music.patterns[patternID] as! PPPatternObject)
 		gridView.driver = doc.theDriver
 		gridView.didEditPattern = { [weak doc] in
 			doc?.updateChangeCount(.changeDone)

@@ -38,6 +38,7 @@ static void *kMusicContext = &kMusicContext;
 - (void)dealloc
 {
 	[_observedDocument removeObserver:self forKeyPath:@"theMusic" context:kMusicContext];
+	[_observedDocument removeObserver:self forKeyPath:@"currentPatternID" context:kMusicContext];
 }
 
 - (void)viewDidLoad
@@ -76,6 +77,10 @@ static void *kMusicContext = &kMusicContext;
 		[doc addObserver:self
 			  forKeyPath:@"theMusic"
 				 options:NSKeyValueObservingOptionInitial
+				 context:kMusicContext];
+		[doc addObserver:self
+			  forKeyPath:@"currentPatternID"
+				 options:0
 				 context:kMusicContext];
 		self.observedDocument = doc;
 	}
@@ -250,15 +255,24 @@ static void *kMusicContext = &kMusicContext;
 
 - (void)reloadFromDocument
 {
-	PPMusicObject *music = [self resolvedDocument].theMusic;
+	PPDocument *doc = [self resolvedDocument];
+	PPMusicObject *music = doc.theMusic;
 	if (!music || music.patterns.count == 0) {
 		self.gridView.pattern = nil;
 		return;
 	}
 
-	self.gridView.editUndoManager = [self resolvedDocument].undoManager;
+	// currentPatternID (settable from the Pattern List window) replaces
+	// what used to be a hardcoded 0 -- every editor in this port showed
+	// only the first pattern, since nothing else set it to anything else.
+	NSInteger patternID = doc.currentPatternID;
+	if (patternID < 0 || patternID >= (NSInteger)music.patterns.count) {
+		patternID = 0;
+	}
+
+	self.gridView.editUndoManager = doc.undoManager;
 	self.gridView.trackCount = MAX(1, (NSInteger)music.totalTracks);
-	self.gridView.pattern = music.patterns[0];
+	self.gridView.pattern = music.patterns[patternID];
 }
 
 @end
