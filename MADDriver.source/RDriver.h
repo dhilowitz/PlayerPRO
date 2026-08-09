@@ -940,6 +940,15 @@ PPEXPORT bool	MADDriverChannelIsDonePlaying(MADDriverRecPtr theRec, int chan);
  */
 PPEXPORT MADDriverBase *MADDriverGetBase(MADDriverRecPtr theRec);
 
+/*!
+ *	@function	MADDriverGetLoopCurrentPattern
+ *	@abstract	Whether \c theRec restarts the pattern currently playing
+ *				instead of advancing to the next order-list entry when it
+ *				ends. See loopCurrentPattern's declaration in MADDriver.h.
+ */
+PPEXPORT bool	MADDriverGetLoopCurrentPattern(MADDriverRecPtr theRec);
+PPEXPORT void	MADDriverSetLoopCurrentPattern(MADDriverRecPtr theRec, bool loop);
+
 #pragma mark General Functions
 
 PPEXPORT MADErr		MADKillInstrument(MADMusic*, short ins);

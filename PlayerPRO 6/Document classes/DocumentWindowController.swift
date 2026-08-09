@@ -28,6 +28,7 @@ class DocumentWindowController: NSWindowController {
 	@IBOutlet weak var speedField:				NSTextField!
 	@IBOutlet weak var tempoStepper:			NSStepper!
 	@IBOutlet weak var tempoField:				NSTextField!
+	@IBOutlet weak var loopPatternCheckbox:	NSButton!
 	
 	@IBOutlet weak var boxController:		BoxViewController!
 	@IBOutlet weak var digitalController:	DigitalViewController!
@@ -154,6 +155,15 @@ class DocumentWindowController: NSWindowController {
 		_ = try? driver.stop()
 		stopPlaybackTimer()
 		updateTransportDisplay()
+	}
+
+	// PPDriver.loopCurrentPattern (checked only at Interrupt.c's natural
+	// pattern-end site) -- restarts whatever pattern is currently playing
+	// instead of advancing to the next order-list entry, without touching
+	// the song's own Dxx/Bxx pattern-break effects.
+	@IBAction func toggleLoopPattern(_ sender: AnyObject!) {
+		guard let driver = currentDocument?.theDriver else { return }
+		driver.loopCurrentPattern = (sender as? NSButton)?.state == .on
 	}
 
 	private func startPlaybackTimer() {

@@ -483,10 +483,20 @@
 	drivBase->PL = partitionPosition;
 }
 
+- (BOOL)loopCurrentPattern
+{
+	return MADDriverGetLoopCurrentPattern(theRec);
+}
+
+- (void)setLoopCurrentPattern:(BOOL)loopCurrentPattern
+{
+	MADDriverSetLoopCurrentPattern(theRec, loopCurrentPattern);
+}
+
 - (short)volume
 {
 	MADDriverBase *drivBase = GetDriverBase();
-	
+
 	return drivBase->VolGlobal;
 }
 

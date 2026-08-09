@@ -135,6 +135,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property short patternPosition;
 @property short patternIdentifier;
 @property short partitionPosition;
+/// When set, playback restarts the pattern currently playing instead of
+/// advancing to the next order-list entry when it ends -- checked only at
+/// that one natural pattern-end site, so a song's own Dxx/Bxx pattern-break
+/// effects still fire normally.
+@property BOOL loopCurrentPattern;
 /// 0 to 64
 @property short volume;
 /// Live ticks-per-row ("speed" in tracker terms). 1 to 31, the engine's

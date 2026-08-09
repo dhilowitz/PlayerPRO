@@ -15,6 +15,7 @@
                 <outlet property="exportSettingsBox" destination="100036" id="100042"/>
                 <outlet property="exportWindow" destination="100026" id="100041"/>
                 <outlet property="fastForwardButton" destination="uMf-5K-EbC" id="kSU-RY-Mmk"/>
+                <outlet property="loopPatternCheckbox" destination="ppk-lp-chk" id="ppk-lp-out"/>
                 <outlet property="infoInfoField" destination="mKY-GN-Jh0" id="BBc-YF-6Jn"/>
                 <outlet property="infoNameField" destination="Ave-wj-kMR" id="eiM-pW-ME6"/>
                 <outlet property="infoWindow" destination="Ava-CI-cGq" id="Zkq-nt-0Nc"/>
@@ -77,6 +78,17 @@
                                     </buttonCell>
                                                                     <connections>
                                         <action selector="rewindToStart:" target="-2" id="aB2-rw-nd0"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" id="ppk-lp-chk">
+                                    <rect key="frame" x="17" y="70" width="72" height="18"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="check" title="Loop" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="off" inset="2" id="ppk-lp-cel">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="toggleLoopPattern:" target="-2" id="ppk-lp-act"/>
                                     </connections>
                                 </button>
                                 <slider verticalHuggingPriority="750" id="oP5-bp-Z0e">

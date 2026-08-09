@@ -58,6 +58,12 @@ struct MADDriverRec {
 	short			curDrawPtr;
 	unsigned long	curTime;
 	bool			XMLinear, MODMode, JumpToNextPattern, endPattern, MADPlay;
+	// User-facing "loop the pattern currently playing" toggle -- deliberately
+	// separate from JumpToNextPattern, which Effects.c's Dxx/Bxx handling
+	// also reads to gate genuine in-song pattern-break/position-jump effects;
+	// reusing it here would silently suppress those too. Checked only at
+	// Interrupt.c's natural pattern-end site.
+	bool			loopCurrentPattern;
 	int				ASCBUFFER;
 	size_t			BufSize;
 	int				VSYNC, BufCounter, BytesToGenerate;

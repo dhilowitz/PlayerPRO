@@ -1374,8 +1374,14 @@ void NoteAnalyse(MADDriverRec *intDriver)
 						if (intDriver->base.PartitionReader >= intDriver->base.curMusic->partition[intDriver->base.Pat]->header.size) {
 							intDriver->base.PartitionReader = 0;
 							intDriver->endPattern = true;
-							
-							if (intDriver->JumpToNextPattern) {
+
+							// PartitionReader is already reset to 0 above, so
+							// skipping just this advance is enough to make the
+							// same pattern (intDriver->base.Pat, unchanged)
+							// start over from row 0 -- loopCurrentPattern is
+							// deliberately checked only here, not folded into
+							// JumpToNextPattern itself (see its declaration).
+							if (intDriver->JumpToNextPattern && !intDriver->loopCurrentPattern) {
 								intDriver->base.PL++;
 								intDriver->base.Pat = intDriver->base.curMusic->header->oPointers[intDriver->base.PL];
 								

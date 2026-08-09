@@ -26,6 +26,16 @@ MADDriverBase *MADDriverGetBase(MADDriverRecPtr theRec)
 	return &theRec->base;
 }
 
+bool MADDriverGetLoopCurrentPattern(MADDriverRecPtr theRec)
+{
+	return theRec->loopCurrentPattern;
+}
+
+void MADDriverSetLoopCurrentPattern(MADDriverRecPtr theRec, bool loop)
+{
+	theRec->loopCurrentPattern = loop;
+}
+
 bool MADDriverChannelIsDonePlaying(MADDriverRec *theRec, int channel)
 {
 	//TODO: more work here!
