@@ -490,6 +490,36 @@
 	return drivBase->VolGlobal;
 }
 
+- (short)speedTicksPerRow
+{
+	MADDriverBase *drivBase = GetDriverBase();
+
+	return drivBase->speed;
+}
+
+- (void)setSpeedTicksPerRow:(short)speedTicksPerRow
+{
+	NSParameterAssert(speedTicksPerRow >= 1 && speedTicksPerRow <= 31);
+	MADDriverBase *drivBase = GetDriverBase();
+
+	drivBase->speed = speedTicksPerRow;
+}
+
+- (short)tempoBPM
+{
+	MADDriverBase *drivBase = GetDriverBase();
+
+	return drivBase->finespeed;
+}
+
+- (void)setTempoBPM:(short)tempoBPM
+{
+	NSParameterAssert(tempoBPM >= 32 && tempoBPM <= 255);
+	MADDriverBase *drivBase = GetDriverBase();
+
+	drivBase->finespeed = tempoBPM;
+}
+
 - (void)setVolume:(short)volume
 {
 	// Same inverted-assertion bug shape as isChannelActiveAtIndex:/

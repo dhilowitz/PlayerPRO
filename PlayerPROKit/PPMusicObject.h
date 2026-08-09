@@ -42,6 +42,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property MADByte generalSpeed;
 @property MADByte generalVolume;
 
+/// The song's saved default ticks-per-row (header->speed), reseeded into
+/// PPDriver.speedTicksPerRow every time playback restarts from the top.
+/// NOT the same as -newSpeed/-generalSpeed, which control the Adaptators
+/// window's unrelated overall playback-rate scalar (header->ESpeed /
+/// header->generalSpeed) -- this is the actual tracker Speed value.
+@property short defaultSpeed;
+/// The song's saved default tempo in BPM (header->tempo), reseeded into
+/// PPDriver.tempoBPM every time playback restarts from the top. See
+/// -defaultSpeed.
+@property short defaultTempo;
+
 - (instancetype)init;
 
 /// Creates a music object from the supplied MADK file ONLY

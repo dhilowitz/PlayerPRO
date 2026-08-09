@@ -314,6 +314,31 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 	currentMusic->header->generalVol = generalVolume;
 }
 
+- (short)defaultSpeed
+{
+	return currentMusic->header->speed;
+}
+
+- (void)setDefaultSpeed:(short)defaultSpeed
+{
+	// Same range PPDriver.speedTicksPerRow asserts -- the engine's own Fxx
+	// effect argument split between a speed command (<32) and a tempo one
+	// (>=32), see MADCheckSpeed/DoEffect.
+	NSParameterAssert(defaultSpeed >= 1 && defaultSpeed <= 31);
+	currentMusic->header->speed = defaultSpeed;
+}
+
+- (short)defaultTempo
+{
+	return currentMusic->header->tempo;
+}
+
+- (void)setDefaultTempo:(short)defaultTempo
+{
+	NSParameterAssert(defaultTempo >= 32 && defaultTempo <= 255);
+	currentMusic->header->tempo = defaultTempo;
+}
+
 - (MADErr)exportInstrumentListToURL:(NSURL*)outURL
 {
 	// fileHandleForWritingToURL: only opens an EXISTING file -- it never
@@ -896,7 +921,7 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 
 + (NSSet*)keyPathsForValuesAffectingInternalMadMusicStruct
 {
-	return [NSSet setWithObjects:@"title", @"information", @"usesLinearPitcchTable", @"limitPitchToMODTable", @"showsCopyright", @"newPitch", @"newSpeed", @"generalPitch", @"generalSpeed", @"generalVolume", @"instruments", @"patterns", @"buses", nil];
+	return [NSSet setWithObjects:@"title", @"information", @"usesLinearPitcchTable", @"limitPitchToMODTable", @"showsCopyright", @"newPitch", @"newSpeed", @"generalPitch", @"generalSpeed", @"generalVolume", @"defaultSpeed", @"defaultTempo", @"instruments", @"patterns", @"buses", nil];
 }
 
 + (NSSet*)keyPathsForValuesAffectingSDatas

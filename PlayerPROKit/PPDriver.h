@@ -137,6 +137,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property short partitionPosition;
 /// 0 to 64
 @property short volume;
+/// Live ticks-per-row ("speed" in tracker terms). 1 to 31, the engine's
+/// own Fxx effect argument split between a speed command (<32) and a
+/// tempo one (>=32) -- see MADCheckSpeed/DoEffect. Reseeded from
+/// PPMusicObject.defaultSpeed whenever playback restarts from the top;
+/// not the same property, and not persisted anywhere on its own.
+@property short speedTicksPerRow;
+/// Live tempo in BPM ("finespeed" in tracker terms). 32 to 255, the
+/// complementary half of the same Fxx argument range as
+/// -speedTicksPerRow. See PPMusicObject.defaultTempo.
+@property short tempoBPM;
 @property BOOL usesEqualizer;
 @property (readonly, nullable) void *oscilloscopePointer NS_RETURNS_INNER_POINTER;
 @property (readonly) size_t oscilloscopeSize;
