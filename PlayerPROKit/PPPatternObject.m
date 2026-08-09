@@ -144,10 +144,93 @@ static const dispatch_block_t initUTIArray = ^{
 	return patternHeader.size;
 }
 
+// Resizes the pattern in place (grow or shrink), matching MainDriver.c's
+// ConvertTo64Rows: calloc a fresh PatData blob sized for the new row count
+// and copy cell-by-cell rather than memcpy, since GetMADCommand's own index
+// formula (header.size * track + row) means the row stride differs between
+// the old and new blobs whenever size actually changes -- a straight
+// memcpy would interleave the wrong rows into the wrong tracks. Previously
+// just wrote the header field alone, which desynced it from the actual
+// Cmds allocation and risked out-of-bounds access in every getCmd/setCmd
+// caller; nothing called this method before now, which is the only reason
+// that was survivable.
 - (void)setPatternSize:(int)patternSize
 {
-	//TODO: more work here!
-	patternHeader.size = patternSize;
+	if (patternSize < 1) {
+		patternSize = 1;
+	}
+	// No format-imposed ceiling exists, but 256 already exceeds every
+	// convention this tracker format's own UI has ever shown (64 is
+	// standard); matches PatternListWindowController's own self-imposed
+	// order-list length cap.
+	if (patternSize > 256) {
+		patternSize = 256;
+	}
+	if (patternSize == patternHeader.size) {
+		return;
+	}
+
+	MADMusic *mus = _musicWrapper._currentMusic;
+	if (index < 0 || !mus || !mus->partition[index]) {
+		// Not backed by a live music struct -- nothing to reallocate,
+		// matches writeThroughCommand:'s identical early-return shape.
+		patternHeader.size = patternSize;
+		return;
+	}
+
+	short numChn = mus->header->numChn;
+	PatData *oldPat = mus->partition[index];
+	int oldSize = oldPat->header.size;
+
+	size_t newBlobSize = sizeof(PatHeader) + (size_t)numChn * (size_t)patternSize * sizeof(Cmd);
+	PatData *newPat = (PatData *)calloc(newBlobSize, 1);
+	if (!newPat) {
+		return;
+	}
+
+	newPat->header = oldPat->header;
+	newPat->header.size = patternSize;
+
+	// Guards NoteAnalyse's per-row effect processing the same way this
+	// session's earlier "Guard NoteAnalyse effect processing on Reading"
+	// fix already relies on -- partition[index] is about to be swapped and
+	// the old blob freed, so nothing should be mid-read of it when that
+	// happens.
+	bool wasUnderModification = mus->musicUnderModification;
+	mus->musicUnderModification = true;
+
+	for (int row = 0; row < patternSize; row++) {
+		for (int chan = 0; chan < numChn; chan++) {
+			Cmd *dst = GetMADCommand(row, chan, newPat);
+			if (row < oldSize) {
+				Cmd *src = GetMADCommand(row, chan, oldPat);
+				if (dst && src) {
+					*dst = *src;
+				}
+			} else if (dst) {
+				MADKillCmd(dst);
+			}
+		}
+	}
+
+	mus->partition[index] = newPat;
+	free(oldPat);
+
+	mus->musicUnderModification = wasUnderModification;
+
+	patternHeader = newPat->header;
+
+	// self.commands mirrors the struct 1:1, same shape
+	// -initWithMusic:patternAtIndex: builds it in -- rebuilt the same way
+	// rather than patched in place, since every index shifts when the
+	// per-track row stride changes.
+	NSInteger newCount = (NSInteger)numChn * patternSize;
+	NSMutableArray *newCommands = [[NSMutableArray alloc] initWithCapacity:newCount];
+	for (NSInteger i = 0; i < newCount; i++) {
+		PPMadCommandObject *tmpObj = [[PPMadCommandObject alloc] initWithCmdPtr:&newPat->Cmds[i]];
+		[newCommands addObject:tmpObj];
+	}
+	self.commands = newCommands;
 }
 
 - (instancetype)initWithMusic:(PPMusicObject *)mus

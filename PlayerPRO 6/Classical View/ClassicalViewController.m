@@ -28,6 +28,7 @@ static void *kMusicContext = &kMusicContext;
 @property (nonatomic, strong) NSTextField *effectField;
 @property (nonatomic, strong) NSButton *argumentCheckbox;
 @property (nonatomic, strong) NSTextField *argumentField;
+@property (nonatomic, strong) NSTextField *lengthField;
 @end
 
 @implementation ClassicalViewController
@@ -169,9 +170,37 @@ static void *kMusicContext = &kMusicContext;
 						checkbox:&argCheckbox field:&argField];
 	self.argumentCheckbox = argCheckbox;
 	self.argumentField = argField;
+	x += 14;
+
+	// -[PPPatternObject setPatternSize:] used to just write the header field
+	// alone, desyncing it from the actual Cmds allocation -- now that it
+	// really reallocates (grow or shrink, preserving existing rows), this
+	// is the only place in the app that can invoke it at all.
+	x = [self addLabel:NSLocalizedString(@"Len:", @"pattern length label") atX:x toStrip:strip];
+	self.lengthField = [self addNumberFieldAtX:&x toStrip:strip
+										 value:self.gridView.pattern.patternSize ?: 64
+										   min:1 max:256
+										action:@selector(patternLengthChanged:)];
 
 	[self.view addSubview:strip];
 	self.controlStrip = strip;
+}
+
+- (IBAction)patternLengthChanged:(id)sender
+{
+	PPPatternObject *pattern = self.gridView.pattern;
+	if (!pattern) {
+		return;
+	}
+	NSInteger newSize = [self syncedValueFrom:sender];
+	pattern.patternSize = (int)newSize;
+	// pattern.patternSize's setter reallocates the same PPPatternObject in
+	// place rather than replacing it, so PatternGridView's own didSet-driven
+	// invalidateSize()/redraw (see its `pattern` property) never fires on
+	// its own -- reassigning here is what actually triggers it.
+	self.gridView.pattern = pattern;
+	[[self resolvedDocument] updateChangeCount:NSChangeDone];
+	[self.view.window makeFirstResponder:self.gridView];
 }
 
 /// A checkbox ("does typing a note also stamp this field?") paired with the
@@ -384,6 +413,7 @@ static void *kMusicContext = &kMusicContext;
 	self.gridView.editUndoManager = doc.undoManager;
 	self.gridView.trackCount = MAX(1, (NSInteger)music.totalTracks);
 	self.gridView.pattern = music.patterns[patternID];
+	self.lengthField.integerValue = self.gridView.pattern.patternSize;
 }
 
 @end
