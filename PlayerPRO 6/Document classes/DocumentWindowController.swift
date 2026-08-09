@@ -132,6 +132,21 @@ class DocumentWindowController: NSWindowController {
 			_ = try? driver.play()
 			startPlaybackTimer()
 		}
+		updatePlayButtonImage()
+	}
+
+	// PPPlay is this button's only image in the nib -- there was never a
+	// Stop counterpart, so pressing Play gave no indication playback was
+	// actually toggleable back off. SF Symbols (available at this
+	// project's 11.0 deployment target) cover the Stop half without
+	// needing new bundled artwork to match PPPlay's custom style.
+	private func updatePlayButtonImage() {
+		guard let driver = currentDocument?.theDriver else { return }
+		if driver.isPlayingMusic {
+			playButton?.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: NSLocalizedString("Stop", comment: "transport stop button"))
+		} else {
+			playButton?.image = NSImage(named: NSImage.Name(rawValue: "PPPlay"))
+		}
 	}
 
 	@IBAction func rewindToStart(_ sender: AnyObject!) {
@@ -225,6 +240,7 @@ class DocumentWindowController: NSWindowController {
 		guard let driver = currentDocument?.theDriver else { return }
 
 		updateSpeedTempoDisplay()
+		updatePlayButtonImage()
 
 		var current: Int = 0, total: Int = 0
 		_ = try? driver.getMusicStatusTime(current: &current, total: &total)

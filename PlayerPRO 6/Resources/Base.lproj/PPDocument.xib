@@ -50,7 +50,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <button id="uMf-5K-EbC">
-                                    <rect key="frame" x="143" y="62" width="32" height="32"/>
+                                    <rect key="frame" x="213" y="62" width="32" height="32"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="PPFastForward" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="JHA-ub-cCZ">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -58,7 +58,7 @@
                                     </buttonCell>
                                 </button>
                                 <button id="Ldh-ec-MpH">
-                                    <rect key="frame" x="91" y="62" width="32" height="32"/>
+                                    <rect key="frame" x="161" y="62" width="32" height="32"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="PPPlay" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="yf4-uq-0AS">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -69,7 +69,7 @@
                                     </connections>
                                 </button>
                                 <button id="3cJ-rm-kq9">
-                                    <rect key="frame" x="39" y="62" width="32" height="32"/>
+                                    <rect key="frame" x="109" y="62" width="32" height="32"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="PPReverse" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Jpe-uU-IBo">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>

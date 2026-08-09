@@ -14,7 +14,7 @@
 import Cocoa
 import PlayerPROKit
 
-final class SampleEditorWindowController: NSWindowController {
+final class SampleEditorWindowController: NSWindowController, NSWindowDelegate {
 
 	weak var currentDocument: PPDocument?
 	private(set) var instrument: PPInstrumentObject!
@@ -59,6 +59,7 @@ final class SampleEditorWindowController: NSWindowController {
 		window.isReleasedWhenClosed = false
 
 		self.init(window: window)
+		window.delegate = self
 
 		let content = window.contentView!
 
@@ -74,6 +75,30 @@ final class SampleEditorWindowController: NSWindowController {
 		strip.autoresizingMask = [.width, .minYMargin]
 		content.addSubview(strip)
 		buildControlStrip(strip)
+	}
+
+	// MARK: NSWindowDelegate
+
+	// Without this, dragging the window wider than the waveform just
+	// reveals blank scroll-view space past the sample's end -- there's
+	// nothing more to show once the window is already wide enough to
+	// display the whole sample at the current zoom level. Computed fresh
+	// on every resize (rather than cached and invalidated on zoom
+	// changes) so it's always correct regardless of what changed the
+	// zoom level.
+	func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+		let byteCount = CGFloat(editorView.sampleObject?.data.count ?? 0)
+		guard byteCount > 0 else { return frameSize }
+
+		let sampleWidth = byteCount * editorView.pixelsPerByte
+		let chrome = sender.frame.width - (sender.contentView?.bounds.width ?? sender.frame.width)
+		let maxWindowWidth = max(sampleWidth + chrome, sender.minSize.width)
+
+		var newSize = frameSize
+		if newSize.width > maxWindowWidth {
+			newSize.width = maxWindowWidth
+		}
+		return newSize
 	}
 
 	// MARK: Zoom controls
