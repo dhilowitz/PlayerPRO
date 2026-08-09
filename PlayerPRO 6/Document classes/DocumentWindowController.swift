@@ -51,11 +51,17 @@ class DocumentWindowController: NSWindowController {
 
 		// currentDocument is already set by this point (PPDocument.makeWindowControllers
 		// assigns it immediately after addWindowController, well before this
-		// nib's first -window access forces it to load). updateTransportDisplay()
-		// is otherwise only called from togglePlayback's timer and rewindToStart,
-		// so without this the new Speed/Tempo fields (and the time labels/slider)
-		// would stay blank until the user pressed Play or Rewind once.
-		updateTransportDisplay()
+		// nib's first -window access forces it to load). Only the Speed/Tempo
+		// half, not the full updateTransportDisplay() -- that also reaches into
+		// classicalController/digitalController's gridView (an implicitly-
+		// unwrapped optional), and those child view controllers' own outlets
+		// haven't necessarily finished connecting yet this early in the nib's
+		// loading sequence, which crashed on launch. The time labels/slider/
+		// grid highlighting staying blank until Play or Rewind is pressed is
+		// the existing, harmless behavior updateTransportDisplay() already
+		// had before this session; only the new, directly-editable Speed/Tempo
+		// fields actually need a real value on screen immediately.
+		updateSpeedTempoDisplay()
 	}
 	
 	override var windowNibName: NSNib.Name? {
