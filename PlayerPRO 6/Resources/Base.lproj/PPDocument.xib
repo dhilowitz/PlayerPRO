@@ -21,6 +21,10 @@
                 <outlet property="playButton" destination="Ldh-ec-MpH" id="Tvg-5A-q7q"/>
                 <outlet property="playbackPositionSlider" destination="oP5-bp-Z0e" id="e4y-UQ-cKW"/>
                 <outlet property="reverseButton" destination="3cJ-rm-kq9" id="8Sh-w9-ekG"/>
+                <outlet property="speedField" destination="ppk-sp-fld" id="ppk-sp-out"/>
+                <outlet property="speedStepper" destination="ppk-sp-stp" id="ppk-sp-sto"/>
+                <outlet property="tempoField" destination="ppk-tm-fld" id="ppk-tm-out"/>
+                <outlet property="tempoStepper" destination="ppk-tm-stp" id="ppk-tm-sto"/>
                 <outlet property="totalTimeLabel" destination="jwX-rY-VeA" id="ehf-Tb-kNo"/>
                 <outlet property="waveController" destination="UmV-E5-CNH" id="wyQ-Mk-TUe"/>
                 <outlet property="window" destination="5" id="18"/>
@@ -39,10 +43,10 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <box autoresizesSubviews="NO" title="Box" borderType="line" titlePosition="noTitle" id="tja-dm-7N1">
-                        <rect key="frame" x="196" y="362" width="216" height="108"/>
+                        <rect key="frame" x="196" y="362" width="356" height="108"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <view key="contentView">
-                            <rect key="frame" x="1" y="1" width="214" height="106"/>
+                            <rect key="frame" x="1" y="1" width="354" height="106"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <button id="uMf-5K-EbC">
@@ -101,7 +105,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="gxI-fR-ZcW">
-                                    <rect key="frame" x="16" y="14" width="182" height="17"/>
+                                    <rect key="frame" x="16" y="14" width="322" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" placeholderString="Music Name" id="ui0-6T-OrF">
                                         <font key="font" metaFont="system"/>
@@ -112,6 +116,64 @@
                                         <binding destination="-2" name="value" keyPath="self.document.musicName" id="f9O-TQ-39p"/>
                                     </connections>
                                 </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ppk-sp-lbl">
+                                    <rect key="frame" x="224" y="65" width="40" height="17"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" title="Speed:" id="ppk-sp-lbc">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ppk-sp-fld">
+                                    <rect key="frame" x="266" y="63" width="34" height="21"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="6" id="ppk-sp-flc">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <action selector="speedChanged:" target="-2" id="ppk-sp-fla"/>
+                                    </connections>
+                                </textField>
+                                <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="ppk-sp-stp">
+                                    <rect key="frame" x="302" y="60" width="19" height="25"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <stepperCell key="cell" continuous="YES" alignment="left" minValue="1" maxValue="31" doubleValue="6" id="ppk-sp-stc"/>
+                                    <connections>
+                                        <action selector="speedChanged:" target="-2" id="ppk-sp-sta"/>
+                                    </connections>
+                                </stepper>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ppk-tm-lbl">
+                                    <rect key="frame" x="224" y="41" width="40" height="17"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" title="Tempo:" id="ppk-tm-lbc">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ppk-tm-fld">
+                                    <rect key="frame" x="266" y="39" width="34" height="21"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="125" id="ppk-tm-flc">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <action selector="tempoChanged:" target="-2" id="ppk-tm-fla"/>
+                                    </connections>
+                                </textField>
+                                <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="ppk-tm-stp">
+                                    <rect key="frame" x="302" y="36" width="19" height="25"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <stepperCell key="cell" continuous="YES" alignment="left" minValue="32" maxValue="255" doubleValue="125" id="ppk-tm-stc"/>
+                                    <connections>
+                                        <action selector="tempoChanged:" target="-2" id="ppk-tm-sta"/>
+                                    </connections>
+                                </stepper>
                             </subviews>
                         </view>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>

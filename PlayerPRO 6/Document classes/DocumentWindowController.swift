@@ -24,6 +24,10 @@ class DocumentWindowController: NSWindowController {
 	@IBOutlet weak var totalTimeLabel:			NSTextField!
 	@IBOutlet weak var playbackPositionSlider:	NSSlider!
 	@IBOutlet weak var editorsTab:				NSTabView!
+	@IBOutlet weak var speedStepper:			NSStepper!
+	@IBOutlet weak var speedField:				NSTextField!
+	@IBOutlet weak var tempoStepper:			NSStepper!
+	@IBOutlet weak var tempoField:				NSTextField!
 	
 	@IBOutlet weak var boxController:		BoxViewController!
 	@IBOutlet weak var digitalController:	DigitalViewController!
@@ -45,6 +49,13 @@ class DocumentWindowController: NSWindowController {
 		// Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
 		exportSettingsBox.contentView = exportController.view
 
+		// currentDocument is already set by this point (PPDocument.makeWindowControllers
+		// assigns it immediately after addWindowController, well before this
+		// nib's first -window access forces it to load). updateTransportDisplay()
+		// is otherwise only called from togglePlayback's timer and rewindToStart,
+		// so without this the new Speed/Tempo fields (and the time labels/slider)
+		// would stay blank until the user pressed Play or Rewind once.
+		updateTransportDisplay()
 	}
 	
 	override var windowNibName: NSNib.Name? {
@@ -143,8 +154,71 @@ class DocumentWindowController: NSWindowController {
 		return f
 	}()
 
+	// MARK: - Speed/Tempo
+
+	// The engine tracks these as two genuinely different things: PPDriver's
+	// speedTicksPerRow/tempoBPM are the LIVE values, which a pattern's own
+	// Fxx effect commands can override mid-song and which are NOT reset when
+	// playback stops (only re-seeded from the file's saved defaults the next
+	// time playback restarts from the top) -- so displaying them while
+	// stopped would show a stale leftover from wherever the song last left
+	// them, not what will actually happen on the next Play. While stopped,
+	// show/edit the song's saved default instead (PPMusicObject.defaultSpeed/
+	// .defaultTempo); while playing, show/edit the live value. This mirrors
+	// a real distinction the engine and file format already make, not an
+	// invented UI rule.
+
+	private func updateSpeedTempoDisplay() {
+		guard let driver = currentDocument?.theDriver, let music = currentDocument?.theMusic else { return }
+
+		let speed = Int(driver.isPlayingMusic ? driver.speedTicksPerRow : music.defaultSpeed)
+		let tempo = Int(driver.isPlayingMusic ? driver.tempoBPM : music.defaultTempo)
+
+		speedStepper?.integerValue = speed
+		tempoStepper?.integerValue = tempo
+		// Don't stomp on an in-progress edit -- currentEditor() is non-nil
+		// only while that specific field is the one actually being typed
+		// into right now.
+		if speedField?.currentEditor() == nil {
+			speedField?.integerValue = speed
+		}
+		if tempoField?.currentEditor() == nil {
+			tempoField?.integerValue = tempo
+		}
+	}
+
+	@IBAction func speedChanged(_ sender: AnyObject!) {
+		guard let driver = currentDocument?.theDriver, let music = currentDocument?.theMusic else { return }
+		let raw = (sender as? NSControl)?.integerValue ?? Int(music.defaultSpeed)
+		let clamped = min(max(raw, 1), 31)
+
+		if driver.isPlayingMusic {
+			driver.speedTicksPerRow = Int16(clamped)
+		} else {
+			music.defaultSpeed = Int16(clamped)
+			currentDocument?.updateChangeCount(.changeDone)
+		}
+		updateSpeedTempoDisplay()
+	}
+
+	@IBAction func tempoChanged(_ sender: AnyObject!) {
+		guard let driver = currentDocument?.theDriver, let music = currentDocument?.theMusic else { return }
+		let raw = (sender as? NSControl)?.integerValue ?? Int(music.defaultTempo)
+		let clamped = min(max(raw, 32), 255)
+
+		if driver.isPlayingMusic {
+			driver.tempoBPM = Int16(clamped)
+		} else {
+			music.defaultTempo = Int16(clamped)
+			currentDocument?.updateChangeCount(.changeDone)
+		}
+		updateSpeedTempoDisplay()
+	}
+
 	private func updateTransportDisplay() {
 		guard let driver = currentDocument?.theDriver else { return }
+
+		updateSpeedTempoDisplay()
 
 		var current: Int = 0, total: Int = 0
 		_ = try? driver.getMusicStatusTime(current: &current, total: &total)
