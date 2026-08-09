@@ -413,7 +413,15 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 			NSSound.beep()
 			return
 		}
-		currentDocument.theMusic.replaceInInstruments(at: target.number, with: decoded)
+		// Copies decoded's fields onto the LIVE target object in place
+		// (see -[PPInstrumentObject copyContentsFromInstrument:]'s own
+		// comment) rather than replacing this array slot with the
+		// standalone decoded object -- decoded came straight from
+		// NSKeyedUnarchiver with no attachment to this document's live
+		// MADMusic struct, so swapping it in wholesale updated this
+		// outline's displayed name but left the real underlying instrument
+		// slot (what the audio engine and Save actually read) untouched.
+		target.copyContents(from: decoded)
 		do {
 			try theDriver.reattachCurrentMusic()
 		} catch {

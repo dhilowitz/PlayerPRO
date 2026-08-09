@@ -1105,9 +1105,21 @@ affectVolType(Note)
 		NSCAssert(whatLen == 96, @"How can \"what\" not be 96?");
 		memcpy(self.what, whatData, whatLen);
 		
-		NSArray *volEnvArray = [aDecoder decodeObjectForKey:PPVolEnv];
-		NSArray *panEnvArray = [aDecoder decodeObjectForKey:PPPannEnv];
-		NSArray *pitchEnvArray = [aDecoder decodeObjectForKey:PPPitchEnv];
+		// decodeObjectForKey: silently returns nil for a key holding an array
+		// of a custom class (PPEnvelopeObject) once the unarchiver is
+		// class-restricted (as NSKeyedUnarchiver.unarchivedObject(ofClass:from:)
+		// makes it, for secure coding) -- only the top-level class passed to
+		// that call is allowed by default, not classes nested inside it.
+		// nil[i] is itself harmless (message-to-nil), but the resulting nil
+		// element then crashed unconditionally in
+		// -replaceObjectInPanningEnvelopeAtIndex:withObject: (NSMutableArray
+		// can't hold nil), on every instrument-copy paste. Explicitly
+		// allow-listing NSArray + PPEnvelopeObject is what actually decodes
+		// the real envelope data instead of nil.
+		NSSet *envelopeClasses = [NSSet setWithObjects:[NSArray class], [PPEnvelopeObject class], nil];
+		NSArray *volEnvArray = [aDecoder decodeObjectOfClasses:envelopeClasses forKey:PPVolEnv];
+		NSArray *panEnvArray = [aDecoder decodeObjectOfClasses:envelopeClasses forKey:PPPannEnv];
+		NSArray *pitchEnvArray = [aDecoder decodeObjectOfClasses:envelopeClasses forKey:PPPitchEnv];
 		
 		for (int i = 0; i < 12; i++) {
 			PPEnvelopeObject *aVolEnv = volEnvArray[i];
@@ -1126,7 +1138,10 @@ affectVolType(Note)
 		
 		self.panningSustain = [aDecoder decodeInt32ForKey:PPPanSus];
 		self.panningBegin = [aDecoder decodeInt32ForKey:PPPanBeg];
-		self.panningEnd = [aDecoder decodeInt32ForKey:PPPitchEnv];
+		// Was decoding key PPPitchEnv (the pitch envelope ARRAY) as an int32
+		// here -- a copy-paste typo against the encode side, which correctly
+		// uses PPPanEnd (see -encodeWithCoder: above).
+		self.panningEnd = [aDecoder decodeInt32ForKey:PPPanEnd];
 		
 		self.pitchSustain = [aDecoder decodeInt32ForKey:PPPitchSus];
 		self.pitchBegin = [aDecoder decodeInt32ForKey:PPPitchBeg];
@@ -1140,7 +1155,12 @@ affectVolType(Note)
 		self.panningSize = [aDecoder decodeInt32ForKey:PPPannSize];
 		self.pitchSize = [aDecoder decodeInt32ForKey:PPPitchSize];
 
-		for (PPSampleObject *sampObj in (NSArray*)[aDecoder decodeObjectForKey:PPSamples]) {
+		// Same class-restriction issue as the envelope arrays above -- plain
+		// decodeObjectForKey: silently returned nil here, which fast
+		// enumeration over nil just treats as zero iterations (no crash,
+		// but every pasted instrument silently lost all of its samples).
+		NSSet *sampleClasses = [NSSet setWithObjects:[NSArray class], [PPSampleObject class], nil];
+		for (PPSampleObject *sampObj in (NSArray*)[aDecoder decodeObjectOfClasses:sampleClasses forKey:PPSamples]) {
 			[self addSampleObject:sampObj];
 		}
 		writebackAddr = &theInstrument;
@@ -1190,6 +1210,66 @@ affectVolType(Note)
 {
 	//reset the instrument so the samples aren't freed twice.
 	[self resetInstrument];
+}
+
+// Used by instrument copy/paste (InstrumentPanelController): copies every
+// field of `other` onto self EXCEPT number/firstSample/theMus, which stay
+// tied to self's own slot. This deliberately goes through self's own
+// property setters (each already writes through to whatever live struct
+// self is actually attached to -- writebackAddr/&theMus._currentMusic->fid[]
+// for an attached instrument) rather than swapping self out for `other`
+// wholesale. `other` typically comes straight from
+// NSKeyedUnarchiver.unarchivedObject(ofClass:from:), which produces a
+// standalone object whose own writebackAddr only ever points at its own
+// local snapshot struct (see -initWithCoder:) -- it never reaches the real
+// MADMusic struct the audio engine and file saving actually read from.
+// Replacing an existing array slot with such an object directly (an
+// earlier version of this method did exactly that, via
+// -[PPMusicObject replaceObjectInInstrumentsAtIndex:withObject:]) looked
+// right in this outline (name is cached/read independent of attachment)
+// but left the real underlying instrument slot completely untouched.
+- (void)copyContentsFromInstrument:(PPInstrumentObject *)other
+{
+	self.name = other.name;
+	self.MIDI = other.MIDI;
+	self.volumeFadeOut = other.volumeFadeOut;
+
+	self.volumeSize = other.volumeSize;
+	self.panningSize = other.panningSize;
+	self.pitchSize = other.pitchSize;
+
+	self.volumeSustain = other.volumeSustain;
+	self.volumeBegin = other.volumeBegin;
+	self.volumeEnd = other.volumeEnd;
+
+	self.panningSustain = other.panningSustain;
+	self.panningBegin = other.panningBegin;
+	self.panningEnd = other.panningEnd;
+
+	self.pitchSustain = other.pitchSustain;
+	self.pitchBegin = other.pitchBegin;
+	self.pitchEnd = other.pitchEnd;
+
+	self.vibratoDepth = other.vibratoDepth;
+	self.vibratoRate = other.vibratoRate;
+
+	self.volumeType = other.volumeType;
+	self.panningType = other.panningType;
+
+	memcpy(self.what, other.what, 96);
+
+	for (NSInteger i = 0; i < 12; i++) {
+		[self replaceObjectInVolumeEnvelopeAtIndex:i withObject:[other volumeEnvelopeObjectAtIndex:i]];
+		[self replaceObjectInPanningEnvelopeAtIndex:i withObject:[other panningEnvelopeObjectAtIndex:i]];
+		[self replaceObjectInPitchEnvelopeAtIndex:i withObject:[other pitchEnvelopeObjectAtIndex:i]];
+	}
+
+	if (self.countOfSamples > 0) {
+		[self removeSamplesAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.countOfSamples)]];
+	}
+	for (PPSampleObject *sample in other.samples) {
+		[self addSampleObject:sample];
+	}
 }
 
 @end

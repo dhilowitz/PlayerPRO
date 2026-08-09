@@ -106,6 +106,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (PPSampleObject *)samplesObjectAtIndex:(NSInteger)idx;
 - (void)removeSamplesAtIndexes:(NSIndexSet *)indexes;
 
+//! Copies every field of `other` onto the receiver except number/firstSample/
+//! theMus, which stay tied to the receiver's own slot -- writes through the
+//! receiver's own property setters, so the receiver's existing live
+//! attachment (if any) is preserved. Used for instrument copy/paste.
+- (void)copyContentsFromInstrument:(PPInstrumentObject *)other NS_SWIFT_NAME(copyContents(from:));
+
 @end
 
 NS_ASSUME_NONNULL_END
