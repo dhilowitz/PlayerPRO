@@ -127,7 +127,18 @@ final class SampleEditorWindowController: NSWindowController {
 		let idx = sender.indexOfSelectedItem - 1
 		defer { sender.selectItem(at: 0) }
 
-		guard idx >= 0, let document = currentDocument, editorView.selection.length > 0 else {
+		guard idx >= 0, let document = currentDocument else {
+			NSSound.beep()
+			return
+		}
+
+		// Choosing a filter with nothing selected is far more likely to mean
+		// "apply this to the whole sample" than "do nothing" -- matches
+		// selectAll(_:) added alongside this on SampleEditorView.
+		if editorView.selection.length == 0 {
+			editorView.selectAll(nil)
+		}
+		guard editorView.selection.length > 0 else {
 			NSSound.beep()
 			return
 		}

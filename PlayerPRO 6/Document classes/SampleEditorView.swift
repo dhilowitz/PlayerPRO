@@ -308,6 +308,15 @@ final class SampleEditorView: NSView {
 		deleteSelection()
 	}
 
+	// Standard responder-chain action -- the Edit menu's "Select All" item
+	// already targets whatever's first responder via selectAll:, same as
+	// delete(_:) above already picks up the Edit menu's Delete item with no
+	// further wiring needed.
+	override func selectAll(_ sender: Any?) {
+		guard let samp = sampleObject, let length = samp.data?.count, length > 0 else { return }
+		selection = NSRange(location: 0, length: length)
+	}
+
 	private func deleteSelection() {
 		guard let samp = sampleObject, selection.length > 0, let range = Range(selection) else { return }
 		var newData: Data = samp.data ?? Data()
