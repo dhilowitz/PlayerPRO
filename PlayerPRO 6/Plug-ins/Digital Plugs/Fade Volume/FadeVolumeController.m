@@ -57,6 +57,14 @@
 	_currentBlock([NSError errorWithDomain:PPMADErrorDomain code:MADUserCancelledErr userInfo:nil]);
 }
 
+// See FadeWindowController.m's identical override -- without this, a
+// formatter rejecting the field editor's text traps it and refuses
+// resignFirstResponder, which blocks Cancel/OK and even Cmd+Q.
+- (BOOL)control:(NSControl *)control didFailToFormatString:(NSString *)string errorDescription:(NSString *)error
+{
+	return YES;
+}
+
 #if 0
 - (void)windowDidLoad
 {

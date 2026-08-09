@@ -102,6 +102,18 @@
 	_currentBlock([NSError errorWithDomain:PPMADErrorDomain code:MADUserCancelledErr userInfo:nil]);
 }
 
+// Without this, AppKit's default response to a formatter rejecting the
+// field editor's text (e.g. typing "100" into the non-lenient percent
+// formatter) is to trap the field editor and refuse resignFirstResponder
+// forever -- Cancel/OK just beep, and even Cmd+Q hangs, since app
+// termination has to end editing on every window first. Returning YES
+// lets editing end normally; the bound property simply keeps its last
+// successfully-parsed value.
+- (BOOL)control:(NSControl *)control didFailToFormatString:(NSString *)string errorDescription:(NSString *)error
+{
+	return YES;
+}
+
 #if 0
 - (void)windowDidLoad
 {

@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import <PlayerPROKit/PlayerPROKit.h>
 
-@interface FadeWindowController : NSWindowController
+@interface FadeWindowController : NSWindowController <NSControlTextEditingDelegate>
 @property double fadeFrom;
 @property double fadeTo;
 @property NSRange selectionRange;

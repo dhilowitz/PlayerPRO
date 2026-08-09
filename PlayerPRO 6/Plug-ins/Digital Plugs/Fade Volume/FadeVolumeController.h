@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import <PlayerPROKit/PlayerPROKit.h>
 
-@interface FadeVolumeController : NSWindowController
+@interface FadeVolumeController : NSWindowController <NSControlTextEditingDelegate>
 @property double fadeFrom;
 @property double fadeTo;
 @property Pcmd *thePcmd;
