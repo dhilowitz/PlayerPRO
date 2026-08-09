@@ -85,6 +85,61 @@ final class SampleEditorWindowController: NSWindowController {
 		fit.bezelStyle = .rounded
 		fit.frame = NSRect(x: 70, y: 4, width: 44, height: 22)
 		strip.addSubview(fit)
+
+		let filters = NSPopUpButton(frame: NSRect(x: 122, y: 3, width: 180, height: 24), pullsDown: true)
+		filters.addItem(withTitle: NSLocalizedString("Filters", comment: "sample editor filters popup title"))
+		let handler = (AppDelegate.shared as! AppDelegate).filterHandler
+		for plug in handler.plugInArray {
+			filters.addItem(withTitle: plug.menuName)
+		}
+		filters.target = self
+		filters.action = #selector(filterSelected(_:))
+		strip.addSubview(filters)
+		filtersPopUp = filters
+	}
+
+	private var filtersPopUp: NSPopUpButton!
+
+	// MARK: Filters Plugs
+
+	/// Runs the selected Filters Plug (Normalize/Backwards/Fade/Crop/Echo/
+	/// Amplitude/etc, already built and working elsewhere in this port)
+	/// against the current selection. beginWithPlugAtIndex already handles
+	/// both sync plugs and async-sheet ones uniformly -- the handler closure
+	/// below is always the single place undo registration + commit happens,
+	/// regardless of which kind actually ran.
+	@objc private func filterSelected(_ sender: NSPopUpButton) {
+		// Item 0 is the "Filters" title itself (pulls-down menu); real
+		// plugs start at 1, matching plugInArray's own 0-based indexing.
+		let idx = sender.indexOfSelectedItem - 1
+		defer { sender.selectItem(at: 0) }
+
+		guard idx >= 0, let document = currentDocument, editorView.selection.length > 0 else {
+			NSSound.beep()
+			return
+		}
+
+		let target = sample
+		let oldData: Data = target.data ?? Data()
+		let name = filterHandler.plugInArray[idx].menuName
+
+		filterHandler.beginWithPlugAtIndex(idx, data: target, selectionRange: editorView.selection,
+											onlyCurrentChannel: false, driver: theDriver, parentDocument: document) { [weak self] error in
+			guard let self = self else { return }
+			if let error = error {
+				if !PPErrorIsUserCancelled(error) {
+					document.presentError(error)
+				}
+				return
+			}
+			// target.data was mutated in place by the plug (the same
+			// mutableCopy-mutate-reassign idiom every Filters Plug already
+			// uses) -- register undo against the pre-filter snapshot, then
+			// commit (write-through/reattach/refresh) with a no-op mutate,
+			// since the mutation already happened.
+			self.editorView.registerExternalDataEditUndo(name, oldData: oldData)
+			self.commitEdit(name) { _ in }
+		}
 	}
 
 	/// Finishes configuring a freshly-init()'d controller for a specific

@@ -350,6 +350,21 @@ final class SampleEditorView: NSView {
 		effectiveUndoManager?.setActionName(name)
 	}
 
+	/// For a mutation applied and already committed externally -- a Filters
+	/// Plug mutates the PPSampleObject instance it's handed in place, and
+	/// SampleEditorWindowController commits the result directly rather than
+	/// through a mutate closure this view supplies -- so there's nothing
+	/// left to apply here, only the undo step to register, using the
+	/// pre-filter snapshot the caller already captured before invoking the
+	/// plug. Composes with performDataEdit's own self-registering undo/redo
+	/// chain exactly the same way a normal data edit's first undo step does.
+	func registerExternalDataEditUndo(_ name: String, oldData: Data) {
+		effectiveUndoManager?.registerUndo(withTarget: self) { target in
+			target.performDataEdit(name, newData: oldData)
+		}
+		effectiveUndoManager?.setActionName(name)
+	}
+
 	// MARK: Clipboard
 	//
 	// A new lightweight type carrying raw bytes plus format metadata --
