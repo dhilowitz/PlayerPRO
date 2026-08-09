@@ -967,6 +967,62 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 	return [_patterns count];
 }
 
+- (nullable PPPatternObject *)addPattern
+{
+	if (!currentMusic || currentMusic->header->numPat >= MAXPATTERN) {
+		// numPat is a MADByte (max 255), but partition[] is only ever
+		// allocated for MAXPATTERN (200) slots -- bound against the real
+		// array capacity, not the field's own theoretical range, or numPat
+		// could be incremented past the array it's supposed to index into.
+		return nil;
+	}
+
+	short newIndex = currentMusic->header->numPat;
+	short numChn = currentMusic->header->numChn;
+
+	// Same malloc+header-init+zero-cells idiom as CreateFreeMADK's own
+	// fresh-pattern allocation (MainDriver.c): a blank 64-row pattern sized
+	// to the song's current channel count, matching the legacy AddAPattern
+	// default exactly.
+	PatData *newPat = (PatData *)calloc(sizeof(PatHeader) + numChn * 64 * sizeof(Cmd), 1);
+	if (!newPat) {
+		return nil;
+	}
+
+	newPat->header.size = 64;
+	newPat->header.compMode = 'NONE';
+	newPat->header.patBytes = 0;
+	newPat->header.unused2 = 0;
+	strlcpy(newPat->header.name, "New pattern", sizeof(newPat->header.name));
+
+	for (short row = 0; row < newPat->header.size; row++) {
+		for (short chan = 0; chan < numChn; chan++) {
+			MADKillCmd(GetMADCommand(row, chan, newPat));
+		}
+	}
+
+	currentMusic->partition[newIndex] = newPat;
+	currentMusic->header->numPat++;
+
+	// -patterns lazily builds _patterns from numPat on first access; force
+	// that to have already happened before appending to it below, so a
+	// caller that never touched -patterns yet doesn't get a rebuild that
+	// silently includes this pattern twice.
+	[self patterns];
+
+	PPPatternObject *newObj = [[PPPatternObject alloc] initWithMusic:self patternAtIndex:newIndex];
+
+	NSIndexSet *addedIndex = [NSIndexSet indexSetWithIndex:newIndex];
+	[self willChange:NSKeyValueChangeInsertion valuesAtIndexes:addedIndex forKey:@"patterns"];
+	[_patterns addObject:newObj];
+	[self didChange:NSKeyValueChangeInsertion valuesAtIndexes:addedIndex forKey:@"patterns"];
+
+	// Deliberately not setting currentMusic->hasChanged here -- the model
+	// layer never does (see every other mutator in this file); that's the
+	// UI layer's job via -[NSDocument updateChangeCount:].
+	return newObj;
+}
+
 - (NSInteger)lengthOfPartitions
 {
 	return currentMusic->header->numPointers;

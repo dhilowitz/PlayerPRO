@@ -117,6 +117,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)addInstrument:(PPInstrumentObject*)theIns;
 - (BOOL)importInstrumentListFromURL:(NSURL *)insURL error:(out NSError * __nullable __autoreleasing*__nullable)theErr;
 
+/// Appends a new, blank 64-row pattern (sized to the song's current channel
+/// count) and returns the PPPatternObject wrapping it, or nil if the song
+/// is already at the MAXPATTERN (200) cap. Not added to the order list --
+/// a pattern existing and a pattern being scheduled to play are separate
+/// concerns, same as everywhere else -orderListLength/-setPatternID:... are
+/// used.
+- (nullable PPPatternObject *)addPattern;
+
 @end
 
 NS_ASSUME_NONNULL_END
