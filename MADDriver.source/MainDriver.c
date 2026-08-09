@@ -3449,6 +3449,18 @@ MADErr MADPlaySoundData(MADDriverRec *MDriver, const char *soundPtr, size_t size
 		curVoice->maxPtr 	= (char*)((size_t)curVoice->begPtr + loopBeg + loopSize);
 
 	curVoice->pann			= 32;
+	// DoVolPanning256 (Interrupt.c) never reads curVoice->pann directly --
+	// it reads pannEnv/nextpannEnv, which normal note-triggered playback
+	// gets from ProcessPanning() on every tracker tick (Interrupt.c,
+	// gated on Reading). A one-shot preview channel never runs through
+	// that tick loop, so pannEnv/nextpannEnv were left at whatever this
+	// channel slot last had -- typically 0/inactive, which DoVolPanning256
+	// resolves to a hard left pan (right-channel gain 0). Setting them
+	// here replicates exactly what ProcessPanning's unconditional prefix
+	// does for a raw-sample channel (it early-returns before touching
+	// these once curVoice->samplePtr != NULL, which is always true here).
+	curVoice->pannEnv		= curVoice->nextpannEnv = curVoice->pann;
+	curVoice->pannEnvActive	= false;
 
 	// This primitive has never taken a real volume parameter -- always
 	// plays at full volume, matching its original, unchanged behavior.
@@ -3456,6 +3468,18 @@ MADErr MADPlaySoundData(MADDriverRec *MDriver, const char *soundPtr, size_t size
 	curVoice->volFade		= 32767;
 	curVoice->nextvolFade	= 32767;
 	curVoice->volEnv		= 64;
+	// Same issue as pann above, for volume: DoVolPanning256's Interpol
+	// branch extrapolates from volEnvInter/nextvolEnv, which normal
+	// playback resets every tick via ProcessEnvelope. Left stale here,
+	// volEnvInter (monotonically incremented every mix buffer -- see
+	// DelayOutPut.c) extrapolates volume against a leftover nextvolEnv
+	// from this channel's last use, producing per-buffer volume swings
+	// heard as distortion. ProcessEnvelope's unconditional prefix (same
+	// samplePtr-gated early-return shape as ProcessPanning) is what
+	// these three lines replicate.
+	curVoice->nextvolEnv	= curVoice->volEnv;
+	curVoice->volEnvInter	= 0;
+	curVoice->volEnvActive	= false;
 	curVoice->KeyOn			= true;
 
 	if (MDriver->base.curMusic != NULL)
