@@ -276,7 +276,22 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	}
 	
 	@IBAction func deleteInstrument(_ sender: AnyObject!) {
-		
+
+	}
+
+	// Wired to InsPanel's toolbar "New" button and the Instruments menu's
+	// "New Instrument" item (MainMenu.xib), neither of which previously had
+	// any connection at all -- the menu item pointed at an empty, never-
+	// populated submenu instead of an action. newInstrumentObjectByAddingToMusic:
+	// already both creates the instrument and appends it to the music, so
+	// there's nothing else to wire up here beyond refreshing the outline.
+	@IBAction func newInstrument(_ sender: AnyObject!) {
+		guard let newInstrument = PPInstrumentObject.newInstrumentObjectByAdding(toMusic: currentDocument.theMusic) else { return }
+		instrumentOutline.reloadData()
+		if let row = instrumentOutline.row(forItem: newInstrument) as Int?, row >= 0 {
+			instrumentOutline.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+		}
+		currentDocument.updateChangeCount(.changeDone)
 	}
 	
 	// Wired to InsPanel's toolbar Play button (InsPanel.xib), which
@@ -311,8 +326,18 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		currentDocument.showSampleEditor(for: instrument, sampleIndex: 0)
 	}
 	
+	// Wired to InsPanel's toolbar "Delete" button (InsPanel.xib), which
+	// previously had no connection at all -- it wasn't merely disabled by
+	// validation, nothing could ever dispatch to it in the first place.
 	@IBAction func deleteSample(_ sender: AnyObject!) {
-		
+		guard let sample = instrumentOutline.item(atRow: instrumentOutline.selectedRow) as? PPSampleObject,
+			  let instrument = instrumentOutline.parent(forItem: sample) as? PPInstrumentObject else {
+			NSSound.beep()
+			return
+		}
+		instrument.removeSamples(at: IndexSet(integer: sample.sampleIndex))
+		instrumentOutline.reloadData()
+		currentDocument.updateChangeCount(.changeDone)
 	}
 	
 	/// The instrument the outline selection currently resolves to -- either

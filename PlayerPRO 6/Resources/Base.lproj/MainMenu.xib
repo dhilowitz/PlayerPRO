@@ -344,7 +344,9 @@
                             <menuItem isSeparatorItem="YES" id="998"/>
                             <menuItem title="New Instrument" id="997">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="New Instrument" id="1000"/>
+                                <connections>
+                                    <action selector="newInstrument:" target="-1" id="dpQ-nI-menuNewI"/>
+                                </connections>
                             </menuItem>
                             <menuItem title="Export Instrument…" id="1306">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -457,7 +459,6 @@
                 <outlet property="exportStatusPanel" destination="tua-JN-ftU" id="FVM-Zh-x6w"/>
                 <outlet property="instrumentExportMenu" destination="1307" id="1309"/>
                 <outlet property="musicExportMenu" destination="864" id="1318"/>
-                <outlet property="newInstrumentMenu" destination="1000" id="1351"/>
             </connections>
         </customObject>
         <window title="Export List" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="utilityWindow" id="tua-JN-ftU" customClass="NSPanel">

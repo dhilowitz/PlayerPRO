@@ -62,7 +62,6 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 	@IBOutlet weak var musicExportMenu:			NSMenu!
 	@IBOutlet weak var aboutPlugInMenu:			NSMenu!
 	@IBOutlet weak var instrumentExportMenu:	NSMenu!
-	@IBOutlet weak var newInstrumentMenu:		NSMenu!
 	@IBOutlet weak var exportStatusPanel:		NSPanel!
 	
 	private(set) lazy var trackerDict: [String: [String]] = {
