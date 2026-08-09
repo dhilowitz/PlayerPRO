@@ -40,19 +40,17 @@ static OSStatus CAAudioCallback(void						*inRefCon,
 	UInt32		i = 0;
 
 	MADDriverRec *theRec = (MADDriverRec*)inRefCon;
-	if (!(theRec->base.Reading || CAAnyChannelActive(theRec))) {
-		switch(theRec->DriverSettings.outPutBits) {
-			case 8:
-				memset(theRec->CABuffer, 0x80, theRec->BufSize);
-				break;
-
-			default:
-			case 16:
-				memset(theRec->CABuffer, 0, theRec->BufSize);
-				break;
-		}
-	}
-
+	// No top-of-callback blanket wipe here: CABuffer can hold a
+	// still-pending, not-yet-copied-to-hardware remainder from the
+	// previous refill (CABufOff < BufSize) even after Reading/
+	// CAAnyChannelActive just went false -- e.g. a short preview note
+	// (piano, instrument-list Play, box-editor audition) that finishes
+	// mid-buffer. Unconditionally memset'ing the whole buffer here used
+	// to destroy that pending tail before it could reach the speaker,
+	// leaving only the already-copied attack transient audible (a
+	// click, then silence). The per-refill "!didMix" branch below
+	// already writes correct silence into CABuffer exactly when a fresh
+	// chunk is actually needed, so nothing else has to happen here.
 	for (i = 0; i < ioData->mNumberBuffers; i++) {
 		abuf = &ioData->mBuffers[i];
 		remaining = abuf->mDataByteSize;
