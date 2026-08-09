@@ -214,6 +214,25 @@ import AudioToolbox
 		instrumentList?.window?.makeKeyAndOrderFront(sender)
 	}
 
+	/// Patterns > Create New Pattern (MainMenu.xib) -- appends a blank
+	/// pattern via PPMusicObject.addPattern and switches every open editor
+	/// to show it. Deliberately does not place it into the order list --
+	/// see -addPattern's own comment for why -- so it's reachable but not
+	/// yet part of what plays until the user places it via the Pattern List.
+	func createNewPattern() {
+		guard let newPattern = theMusic?.addPattern() else {
+			NSSound.beep()   // hit the 200-pattern cap
+			return
+		}
+		updateChangeCount(.changeDone)
+		currentPatternID = newPattern.index
+		patternListWindow?.reload()
+	}
+
+	@IBAction func createNewPattern(_ sender: AnyObject!) {
+		createNewPattern()
+	}
+
 	private func resetPlayerPRODriver() {
 		var theSett = MADDriverSettings.new()
 		let defaults = UserDefaults.standard
