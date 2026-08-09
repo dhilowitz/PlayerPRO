@@ -22,6 +22,12 @@ static void *kMusicContext = &kMusicContext;
 @property (nonatomic, strong) NSTextField *stepField;
 @property (nonatomic, strong) NSTextField *instrumentField;
 @property (nonatomic, strong) NSTextField *octaveField;
+@property (nonatomic, strong) NSButton *volumeCheckbox;
+@property (nonatomic, strong) NSTextField *volumeField;
+@property (nonatomic, strong) NSButton *effectCheckbox;
+@property (nonatomic, strong) NSTextField *effectField;
+@property (nonatomic, strong) NSButton *argumentCheckbox;
+@property (nonatomic, strong) NSTextField *argumentField;
 @end
 
 @implementation ClassicalViewController
@@ -129,9 +135,72 @@ static void *kMusicContext = &kMusicContext;
 										 value:self.gridView.octaveOffset
 										   min:-4 max:4
 										action:@selector(octaveChanged:)];
+	x += 14;
+
+	// Vol/FX/Arg: PPPatternGridView already has writesVolume/writesEffect/
+	// writesArgument + defaultVolume/defaultEffect/defaultArgument
+	// (stamped onto typed notes alongside Ins/Oct) -- nothing in this
+	// controller ever gave them a UI, so they always stayed off.
+	NSButton *volCheckbox; NSTextField *volField;
+	x = [self addToggleFieldAtX:&x toStrip:strip
+						   title:NSLocalizedString(@"Vol", @"volume stamp toggle")
+						 enabled:self.gridView.writesVolume value:self.gridView.defaultVolume
+					enableAction:@selector(volumeEnableChanged:) valueAction:@selector(volumeValueChanged:)
+						checkbox:&volCheckbox field:&volField];
+	self.volumeCheckbox = volCheckbox;
+	self.volumeField = volField;
+	x += 10;
+
+	NSButton *fxCheckbox; NSTextField *fxField;
+	x = [self addToggleFieldAtX:&x toStrip:strip
+						   title:NSLocalizedString(@"FX", @"effect stamp toggle")
+						 enabled:self.gridView.writesEffect value:self.gridView.defaultEffect
+					enableAction:@selector(effectEnableChanged:) valueAction:@selector(effectValueChanged:)
+						checkbox:&fxCheckbox field:&fxField];
+	self.effectCheckbox = fxCheckbox;
+	self.effectField = fxField;
+	x += 10;
+
+	NSButton *argCheckbox; NSTextField *argField;
+	x = [self addToggleFieldAtX:&x toStrip:strip
+						   title:NSLocalizedString(@"Arg", @"argument stamp toggle")
+						 enabled:self.gridView.writesArgument value:self.gridView.defaultArgument
+					enableAction:@selector(argumentEnableChanged:) valueAction:@selector(argumentValueChanged:)
+						checkbox:&argCheckbox field:&argField];
+	self.argumentCheckbox = argCheckbox;
+	self.argumentField = argField;
 
 	[self.view addSubview:strip];
 	self.controlStrip = strip;
+}
+
+/// A checkbox ("does typing a note also stamp this field?") paired with the
+/// numeric value to stamp when it's on -- the same shape as Vol/FX/Arg's
+/// underlying PPPatternGridView properties, just exposed as one control pair
+/// each instead of the always-on Ins/Oct fields above.
+- (CGFloat)addToggleFieldAtX:(CGFloat *)x toStrip:(NSView *)strip title:(NSString *)title
+					  enabled:(BOOL)enabled value:(NSInteger)value
+				 enableAction:(SEL)enableAction valueAction:(SEL)valueAction
+					 checkbox:(NSButton **)checkboxOut field:(NSTextField **)fieldOut
+{
+	NSButton *checkbox = [NSButton checkboxWithTitle:title target:self action:enableAction];
+	[checkbox sizeToFit];
+	checkbox.frame = NSMakeRect(*x, 6, NSWidth(checkbox.frame), 18);
+	checkbox.state = enabled ? NSControlStateValueOn : NSControlStateValueOff;
+	[strip addSubview:checkbox];
+	*checkboxOut = checkbox;
+	*x += NSWidth(checkbox.frame) + 4;
+
+	NSTextField *field = [[NSTextField alloc] initWithFrame:NSMakeRect(*x, 5, 34, 21)];
+	field.alignment = NSTextAlignmentRight;
+	field.integerValue = value;
+	field.target = self;
+	field.action = valueAction;
+	[strip addSubview:field];
+	*fieldOut = field;
+	*x += 34;
+
+	return *x;
 }
 
 - (CGFloat)addLabel:(NSString *)text atX:(CGFloat)x toStrip:(NSView *)strip
@@ -214,6 +283,48 @@ static void *kMusicContext = &kMusicContext;
 - (IBAction)octaveChanged:(id)sender
 {
 	self.gridView.octaveOffset = [self syncedValueFrom:sender];
+	[self.view.window makeFirstResponder:self.gridView];
+}
+
+- (IBAction)volumeEnableChanged:(id)sender
+{
+	self.gridView.writesVolume = ([sender state] == NSControlStateValueOn);
+	[self.view.window makeFirstResponder:self.gridView];
+}
+
+- (IBAction)volumeValueChanged:(id)sender
+{
+	NSInteger v = MAX(0, MIN(255, [sender integerValue]));
+	[sender setIntegerValue:v];
+	self.gridView.defaultVolume = (uint8_t)v;
+	[self.view.window makeFirstResponder:self.gridView];
+}
+
+- (IBAction)effectEnableChanged:(id)sender
+{
+	self.gridView.writesEffect = ([sender state] == NSControlStateValueOn);
+	[self.view.window makeFirstResponder:self.gridView];
+}
+
+- (IBAction)effectValueChanged:(id)sender
+{
+	NSInteger v = MAX(0, MIN(255, [sender integerValue]));
+	[sender setIntegerValue:v];
+	self.gridView.defaultEffect = (uint8_t)v;
+	[self.view.window makeFirstResponder:self.gridView];
+}
+
+- (IBAction)argumentEnableChanged:(id)sender
+{
+	self.gridView.writesArgument = ([sender state] == NSControlStateValueOn);
+	[self.view.window makeFirstResponder:self.gridView];
+}
+
+- (IBAction)argumentValueChanged:(id)sender
+{
+	NSInteger v = MAX(0, MIN(255, [sender integerValue]));
+	[sender setIntegerValue:v];
+	self.gridView.defaultArgument = (uint8_t)v;
 	[self.view.window makeFirstResponder:self.gridView];
 }
 
