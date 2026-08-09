@@ -114,6 +114,32 @@ final class SampleEditorView: NSView {
 		}
 	}
 
+	private static let minPixelsPerByte: CGFloat = 1.0 / 256
+	private static let maxPixelsPerByte: CGFloat = 64
+
+	@objc func zoomIn() {
+		pixelsPerByte = min(pixelsPerByte * 2, Self.maxPixelsPerByte)
+		invalidateSize()
+	}
+
+	@objc func zoomOut() {
+		pixelsPerByte = max(pixelsPerByte / 2, Self.minPixelsPerByte)
+		invalidateSize()
+	}
+
+	/// Sets pixelsPerByte so the whole sample exactly fills the current
+	/// scroll-view viewport -- frame.width doubling as `larg` (Phase 2)
+	/// means this is just "pick the scale where byteCount * pixelsPerByte
+	/// equals the visible width."
+	@objc func zoomToFit() {
+		guard let byteCount = sampleObject?.data.count, byteCount > 0,
+			  let visibleWidth = enclosingScrollView?.contentView.bounds.width, visibleWidth > 0 else {
+			return
+		}
+		pixelsPerByte = visibleWidth / CGFloat(byteCount)
+		invalidateSize()
+	}
+
 	// MARK: Drawing
 
 	override func draw(_ dirtyRect: NSRect) {

@@ -60,6 +60,31 @@ final class SampleEditorWindowController: NSWindowController {
 		let strip = NSView(frame: NSRect(x: 0, y: waveformHeight, width: contentWidth, height: stripHeight))
 		strip.autoresizingMask = [.width, .minYMargin]
 		content.addSubview(strip)
+		buildControlStrip(strip)
+	}
+
+	// MARK: Zoom controls
+	//
+	// A small +/-/Fit button strip, mirroring PianoWindowController's
+	// octave-shift buttons rather than a slider, for visual consistency
+	// with this window's only sibling built the same code-only way.
+
+	private func buildControlStrip(_ strip: NSView) {
+		let zoomOut = NSButton(title: "\u{2212}", target: editorView, action: #selector(SampleEditorView.zoomOut))
+		zoomOut.bezelStyle = .rounded
+		zoomOut.frame = NSRect(x: 6, y: 4, width: 28, height: 22)
+		strip.addSubview(zoomOut)
+
+		let zoomIn = NSButton(title: "+", target: editorView, action: #selector(SampleEditorView.zoomIn))
+		zoomIn.bezelStyle = .rounded
+		zoomIn.frame = NSRect(x: 38, y: 4, width: 28, height: 22)
+		strip.addSubview(zoomIn)
+
+		let fit = NSButton(title: NSLocalizedString("Fit", comment: "sample editor zoom-to-fit button"),
+							target: editorView, action: #selector(SampleEditorView.zoomToFit))
+		fit.bezelStyle = .rounded
+		fit.frame = NSRect(x: 70, y: 4, width: 44, height: 22)
+		strip.addSubview(fit)
 	}
 
 	/// Finishes configuring a freshly-init()'d controller for a specific
@@ -83,6 +108,7 @@ final class SampleEditorWindowController: NSWindowController {
 		window?.title = String(format: NSLocalizedString("%d - %@", comment: "sample editor window title: index - name"),
 								sampleIndex, samp.name.isEmpty ? NSLocalizedString("Untitled", comment: "unnamed sample") : samp.name)
 		editorView.sampleObject = samp
+		editorView.zoomToFit()
 	}
 
 	// MARK: Commit
