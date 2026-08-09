@@ -602,9 +602,18 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 	}
 	
 	override func makeUntitledDocument(ofType typeName: String) throws -> NSDocument {
-		assert(typeName == MADNativeUTI, "Unknown type passed to \(#function): \(typeName)")
+		// Cocoa-Info.plist declares many document types (madk, madh, madfg,
+		// every tracker/instrument format...) all sharing NSDocumentClass
+		// PPDocument -- AppKit is free to request an untitled document of
+		// ANY of them (e.g. window/state restoration remembering the type
+		// of whatever was last open, not just the primary madk type), and
+		// this body creates the same blank PPMusicObject regardless of
+		// typeName, so asserting typeName == MADNativeUTI specifically was
+		// simply wrong: it crashed on every legitimately-declared type
+		// other than madk, including on ordinary launch once any non-madk
+		// document had been open in a previous session.
 		let theDoc = PPDocument(music: PPMusicObject())
-		
+
 		return theDoc
 	}
 	

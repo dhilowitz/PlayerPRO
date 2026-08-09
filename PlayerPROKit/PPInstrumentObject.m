@@ -260,6 +260,13 @@ static const dispatch_block_t initUTIArray = ^{
 		theInstrument.no = number = -1;
 		theInstrument.firstSample = 0;
 		MADResetInstrument(&theInstrument);
+		// writebackAddr must be valid before -setName: runs, since it writes
+		// through writebackAddr->name; it defaults to NULL on a freshly
+		// alloc'd object, so this order crashed unconditionally every time
+		// this initializer was reached (e.g. [PPInstrumentObject new], as
+		// used by PPMINsPlug's .mins importer) via a NULL strlcpy
+		// destination. Same bug already fixed below in -initWithMusic:.
+		writebackAddr = &theInstrument;
 		self.name = @"";
 		_panningEnvelope = [[NSMutableArray alloc] initWithCapacity:12];
 		_volumeEnvelope = [[NSMutableArray alloc] initWithCapacity:12];
@@ -1077,6 +1084,14 @@ affectVolType(Note)
 	if (self = [super init]) {
 		number = -1;
 		samples = [[NSMutableArray alloc] init];
+		// Same writebackAddr-must-be-set-before-first-use bug as -init and
+		// -initWithMusic: (see their comments) -- -resetInstrument and
+		// -setName: below both write through writebackAddr, which defaults
+		// to NULL on a freshly alloc'd object. This crashed unconditionally
+		// on every NSKeyedUnarchiver decode of a PPInstrumentObject,
+		// including this session's own instrument copy/paste (pasteboard
+		// round-trips through this exact initializer).
+		writebackAddr = &theInstrument;
 		[self resetInstrument];
 		_panningEnvelope = [[NSMutableArray alloc] initWithCapacity:12];
 		_volumeEnvelope = [[NSMutableArray alloc] initWithCapacity:12];

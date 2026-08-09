@@ -369,7 +369,15 @@ extension PPSampleObject {
 			})
 		} else {
 			let sampleSize = curData.data.count
-			curData.data.withUnsafeBytes({ (theSample: UnsafePointer<UInt16>) -> Void in
+			// 8-bit PCM is one byte per sample -- theSample must be typed
+			// UInt8, not UInt16. Reinterpreting the raw byte buffer as
+			// 16-bit words here read only every other sample (each pair of
+			// unrelated 8-bit samples byte-swapped together into one bogus
+			// 16-bit value), which is exactly what produced the sparse,
+			// gapped-looking waveform reported for 8-bit samples (e.g.
+			// "Kick+Tamb" in 3000.madh) -- every index below (BS/BE/x) is
+			// already computed in byte units to match.
+			curData.data.withUnsafeBytes({ (theSample: UnsafePointer<UInt8>) -> Void in
 				var BS = start + (tSS * sampleSize) / larg
 				if isStereo {
 					BS /= 2; BS *= 2;
