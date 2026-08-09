@@ -313,7 +313,49 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	}
 	
 	@IBAction func showInstrumentInfo(_ sender: AnyObject!) {
-		
+
+	}
+
+	// MARK: Copy/Paste
+
+	// -[PPInstrumentObject copyWithZone:] aliases the same underlying music
+	// slot (initWithMusic:instrumentIndex:) rather than producing an
+	// independent value, so it's no use here -- routes through the
+	// existing NSSecureCoding + pasteboard conformance instead (already
+	// built for drag/drop, already produces a genuinely standalone
+	// instrument via initWithCoder:'s from-scratch resetInstrument path).
+	// Standard responder-chain actions: the Edit menu's Copy/Paste items
+	// already target whatever's first responder.
+	@IBAction func copy(_ sender: Any?) {
+		guard let instrument = selectedInstrument,
+			  let data = try? NSKeyedArchiver.archivedData(withRootObject: instrument, requiringSecureCoding: true) else {
+			NSSound.beep()
+			return
+		}
+		let pb = NSPasteboard.general
+		pb.clearContents()
+		pb.setData(data, forType: .ppkInstrumentPasteboardUTI)
+	}
+
+	@IBAction func paste(_ sender: Any?) {
+		guard let target = selectedInstrument else {
+			NSSound.beep()
+			return
+		}
+		guard let data = NSPasteboard.general.data(forType: .ppkInstrumentPasteboardUTI),
+			  let decodedOrNil = try? NSKeyedUnarchiver.unarchivedObject(ofClass: PPInstrumentObject.self, from: data),
+			  let decoded = decodedOrNil else {
+			NSSound.beep()
+			return
+		}
+		currentDocument.theMusic.replaceInInstruments(at: target.number, with: decoded)
+		do {
+			try theDriver.reattachCurrentMusic()
+		} catch {
+			NSLog("InstrumentPanelController: reattachCurrentMusic failed after paste: \(error)")
+		}
+		instrumentOutline.reloadData()
+		currentDocument.updateChangeCount(.changeDone)
 	}
 	
 	// Double-clicking a sample row opens its editor directly; double-clicking
