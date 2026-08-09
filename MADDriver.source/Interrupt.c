@@ -1261,7 +1261,7 @@ void NoteAnalyse(MADDriverRec *intDriver)
 				if (intDriver->PatDelay)
 					intDriver->PatDelay--;
 				
-				if (intDriver->base.curMusic != NULL && intDriver->PatDelay == 0) {
+				if (intDriver->base.curMusic != NULL && intDriver->base.Reading && intDriver->PatDelay == 0) {
 					for (i = 0; i < intDriver->MultiChanNo; i++)		//intDriver->base.curMusic->header->numChn
 						CloseEffect(&intDriver->base.chan[i], intDriver->smallcounter, intDriver);
 					
@@ -1411,7 +1411,7 @@ void NoteAnalyse(MADDriverRec *intDriver)
 					}
 				}
 			} else {// SMALLCOUNTER
-				if (intDriver->base.curMusic != NULL) {
+				if (intDriver->base.curMusic != NULL && intDriver->base.Reading) {
 					for (i = 0 ; i < intDriver->MultiChanNo; i++) {
 						DoVolCmd(&intDriver->base.chan[i], intDriver->smallcounter, intDriver);
 						DoEffect(&intDriver->base.chan[i], intDriver->smallcounter, intDriver);
