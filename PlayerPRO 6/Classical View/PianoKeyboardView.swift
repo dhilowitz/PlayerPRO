@@ -136,8 +136,12 @@ open class PianoKeyboardView: NSView {
 			  let sample = instrument.samples.first, let data = sample.data else { return }
 		let channel = Int32(driver.availableChannel)
 		guard channel >= 0 else { return }
+		// PPDriver.playSoundData's "amplitude" parameter is the sample's bit
+		// depth (8/16), not a volume -- passing volume here silently broke
+		// the mixer's bit-depth dispatch (MADChannel.amp) entirely, so
+		// audition never actually produced sound despite reporting success.
 		try? driver.playSoundData(from: data as Data, fromChannel: channel,
-								  amplitude: Int16(sample.volume), bitRate: UInt32(sample.c2spd),
+								  amplitude: Int16(sample.amplitude), bitRate: UInt32(sample.c2spd),
 								  isStereo: sample.isStereo, withNote: UInt8(note))
 	}
 

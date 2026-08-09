@@ -407,7 +407,12 @@
 		case 8:
 			ourData = [[self class] audio8DataWithLength:audioLength frequency:audioFrequency amplitude:audioAmplitude generator:generator stereo:theData.stereo];
 			if (ourData) {
-				[_theDriver playSoundDataFromData:ourData fromChannel:0 amplitude:0xFF bitRate:theData.c2spd isStereo:theData.stereo];
+				// playSoundDataFromData:'s amplitude: parameter is actually
+				// the sample's bit depth (8/16 -- see MADPlaySoundData's
+				// doc comment), not a volume; 0xFF matched neither branch
+				// in the mixer's dispatch, so this preview never produced
+				// audible output despite the call succeeding.
+				[_theDriver playSoundDataFromData:ourData fromChannel:0 amplitude:8 bitRate:theData.c2spd isStereo:theData.stereo];
 			}
 			audio8Ptr = [[self class] createAudio8PtrWithLength:audioLength frequency:audioFrequency amplitude:audioAmplitude generator:generator stereo:theData.stereo];
 			break;
@@ -415,7 +420,7 @@
 		case 16:
 			ourData = [[self class] audio16DataWithLength:audioLength frequency:audioFrequency amplitude:audioAmplitude generator:generator stereo:theData.stereo];
 			if (ourData) {
-				[_theDriver playSoundDataFromData:ourData fromChannel:0 amplitude:0xFF bitRate:theData.c2spd isStereo:theData.stereo];
+				[_theDriver playSoundDataFromData:ourData fromChannel:0 amplitude:16 bitRate:theData.c2spd isStereo:theData.stereo];
 			}
 			audio16Ptr = [[self class] createAudio16PtrWithLength:audioLength frequency:audioFrequency amplitude:audioAmplitude generator:generator stereo:theData.stereo];
 

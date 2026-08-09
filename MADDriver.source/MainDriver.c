@@ -3381,19 +3381,19 @@ MADErr MADPlaySoundDataSYNC(MADDriverRec *MDriver, char *soundPtr, long size, lo
 MADErr MADPlaySoundData(MADDriverRec *MDriver, const char *soundPtr, size_t size, int channel, MADByte note, int amplitude, size_t loopBeg, size_t loopSize, unsigned int rate, bool stereo)
 {
 	MADChannel *curVoice;
-	
+
 	if (channel < 0 || channel >= MDriver->DriverSettings.numChn)
 		return MADParametersErr;
-	
+
 	if (MDriver->base.curMusic != NULL)
 		MDriver->base.curMusic->musicUnderModification = true;
-	
+
 	curVoice = &MDriver->base.chan[channel];
-	
+
 	curVoice->prevPtr		= NULL;
 	curVoice->samplePtr		= (char*)soundPtr;
 	curVoice->stereo		= stereo;
-	
+
 	curVoice->maxPtr = curVoice->curPtr = curVoice->begPtr = (char*)soundPtr;
 	curVoice->maxPtr		+= size;
 	curVoice->sizePtr		= size;
@@ -3404,51 +3404,62 @@ MADErr MADPlaySoundData(MADDriverRec *MDriver, const char *soundPtr, size_t size
 	curVoice->preOff		= 0xFFFFFFFF;
 	curVoice->preVal		= 0;
 	curVoice->spreVal		= 0;
-	curVoice->preVal2		= *curVoice->curPtr;
+	// amplitude is this function's actual bit-depth parameter (8 or 16 --
+	// see this function's own header doc comment in RDriver.h), not a
+	// volume -- Sample16BufferAddDelay dispatches on curVoice->amp against
+	// exactly those two values, so a caller passing anything else (e.g. a
+	// real 0-64 volume, easy to do by mistake given the parameter's name)
+	// silently breaks mixing entirely: neither branch matches, nothing
+	// gets written, and playback is completely silent despite this
+	// function reporting success. Assigned before the preVal2R read below,
+	// which also depends on it, so both use the sample about to play
+	// rather than a stale value left over from this channel's last use.
+	curVoice->amp			= amplitude;
 	if (curVoice->amp == 8)
 		curVoice->preVal2R	= *(curVoice->curPtr+1);
 	else
 		curVoice->preVal2R	= *(curVoice->curPtr+2);
 	curVoice->spreVal2	= *(short*)curVoice->curPtr;
 	curVoice->spreVal2R	= *(short*)(curVoice->curPtr+2);
-	
+
 	if (note == 0xFF)
 		note = 48;
 	curVoice->note		= note;
 	curVoice->ins		= 0;
 	curVoice->viboffset	= 0;
-	curVoice->amp		= amplitude;
 	curVoice->fineTune	= rate;
-	
+
 	curVoice->period	= GetOldPeriod(curVoice->note, curVoice->fineTune, MDriver);
-	
+
 	if (loopBeg > size) {
 		loopBeg = 0;
 		loopSize = 0;
 	}
-	
+
 	if (loopBeg + loopSize > size) {
 		loopBeg = 0;
 		loopSize = 0;
 	}
-	
+
 	curVoice->loopBeg 		= loopBeg;
 	curVoice->loopSize	 	= loopSize;
-	
+
 	if (loopSize > 0)
 		curVoice->maxPtr 	= (char*)((size_t)curVoice->begPtr + loopBeg + loopSize);
-	
+
 	curVoice->pann			= 32;
-	
-	curVoice->vol 			= 64;
+
+	// This primitive has never taken a real volume parameter -- always
+	// plays at full volume, matching its original, unchanged behavior.
+	curVoice->vol			= 64;
 	curVoice->volFade		= 32767;
 	curVoice->nextvolFade	= 32767;
 	curVoice->volEnv		= 64;
 	curVoice->KeyOn			= true;
-	
+
 	if (MDriver->base.curMusic != NULL)
 		MDriver->base.curMusic->musicUnderModification = false;
-	
+
 	return MADNoErr;
 }
 

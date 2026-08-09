@@ -197,8 +197,17 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		guard let data = samp.data else { return }
 		let channel = Int32(theDriver.availableChannel)
 		guard channel >= 0 else { return }
+		// PPDriver.playSoundData's "amplitude" parameter is actually the
+		// sample's bit depth (8 or 16 -- see MADPlaySoundData's own doc
+		// comment in RDriver.h), not a volume; this primitive has never
+		// taken a real volume at all (MADPlaySoundData hardcodes full
+		// volume internally). Passing samp.volume here instead of
+		// samp.amplitude silently broke the mixer's bit-depth dispatch
+		// entirely -- MADChannel.amp matched neither its 8 nor 16 branch,
+		// so nothing was ever mixed, regardless of everything else being
+		// set up correctly.
 		try? theDriver.playSoundData(from: data as Data, fromChannel: channel,
-									  amplitude: Int16(samp.volume), bitRate: UInt32(samp.c2spd),
+									  amplitude: Int16(samp.amplitude), bitRate: UInt32(samp.c2spd),
 									  isStereo: samp.isStereo, withNote: UInt8(samp.realNote))
 	}
 
@@ -222,9 +231,15 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		guard channel >= 0 else { return }
 
 		let playNote = note == 0xFF ? UInt8(samp.realNote) : note
-		let playVolume = volume == 0xFF ? Int16(samp.volume) : Int16(volume)
+		// See playDecodedSample's identical fix above: PPDriver.playSoundData's
+		// "amplitude" parameter is the sample's bit depth (8/16), not a
+		// volume -- this primitive has no real per-call volume control at
+		// all (always plays at full volume internally), so the volume/
+		// playVolume naming here was already a no-op before this fix; what
+		// actually mattered, and was wrong, was passing a volume-shaped
+		// value into the engine's bit-depth parameter.
 		try? theDriver.playSoundData(from: data as Data, fromChannel: channel,
-									  amplitude: playVolume, bitRate: UInt32(samp.c2spd),
+									  amplitude: Int16(samp.amplitude), bitRate: UInt32(samp.c2spd),
 									  isStereo: samp.isStereo, withNote: playNote)
 	}
 	
