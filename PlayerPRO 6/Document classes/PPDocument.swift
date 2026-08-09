@@ -320,22 +320,22 @@ import AudioToolbox
 			return try globalMadLib.identifyFile(at: url)
 		}
 
-		// Diagnostic: this is the one place every "Open" flow (File > Open's
-		// stock openDocument:, drag-and-drop, double-click, Open Recent)
-		// actually funnels through -- typeName not exactly matching
-		// MADNativeUTI is what sends a file down the "foreign format" branch
-		// below, which deliberately clears fileURL so Save doesn't silently
-		// overwrite a non-native file in native format. For an actual native
-		// .madk that's a bug in how typeName got resolved upstream, not
-		// intended behavior, and explains a stale "Untitled N" title.
-		NSLog("PPDocument.read(from:ofType:): %@ opened with typeName %@ (native constant is %@)", url.path, typeName, MADNativeUTI)
-
 		if typeName == MADNativeUTI {
 			theMusic = try PPMusicObject(url: url, driver: theDriver)
 		} else {
+			// Anything that isn't the exact native UTI -- a plugin-imported
+			// tracker format (MOD/S3M/IT/...) or a sibling native PlayerPRO
+			// variant read through its own plugin rather than the built-in
+			// reader (e.g. .madh, via MADH.ppimpexp) -- clears fileURL
+			// deliberately, so a plain Save can't silently overwrite the
+			// original file through an unverified plugin export round-trip;
+			// Save As is required instead. But nothing set displayName to
+			// match, so the window kept whatever auto-numbered "Untitled N"
+			// name it was assigned before this method had a chance to run.
 			let theType = try getType()
 			theMusic = try PPMusicObject(url: url, stringType: theType, driver: theDriver)
 			fileURL = nil
+			displayName = url.deletingPathExtension().lastPathComponent
 		}
 	}
 	
