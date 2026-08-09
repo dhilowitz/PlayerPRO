@@ -351,6 +351,12 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 	func handleFile(_ theURL1: URL, ofType theUTI: String) -> Bool {
 		let sharedWorkspace = NSWorkspace.shared
 		var theURL = theURL1
+		// Diagnostic: which branch handleFile takes (native-open, generic-
+		// extension rename, complex/legacy import, tracker-plugin import,
+		// etc.) is decided entirely by which UTI LaunchServices identifies
+		// a file as, and that's opaque from the outside -- this makes it
+		// visible without needing to attach a debugger.
+		NSLog("handleFile: %@ identified as UTI %@ (conformsToNative=%@)", theURL1.path, theUTI, sharedWorkspace.type(theUTI, conformsToType: MADNativeUTI) ? "YES" : "NO")
 		if sharedWorkspace.type(theUTI, conformsToType: MADNativeUTI) {
 			// Document controller should automatically handle this.
 			// But just in case...
@@ -466,6 +472,11 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 								// the document window for its own call path, but showWindows() here
 								// runs after and undoes it, so it needs re-asserting again.
 								aPPDoc.mainViewController.window?.makeKeyAndOrderFront(self)
+								// This path builds the document by hand instead of going through
+								// NSDocumentController's open machinery (openDocument(withContentsOf:...)
+								// below does this automatically), so nothing added theURL1 to Open
+								// Recent -- it would never appear there, on this launch or any later one.
+								NSDocumentController.shared.noteNewRecentDocumentURL(theURL1)
 							} else {
 								fatalError("Either ourObject or anErr should be nil, not both!")
 							}
