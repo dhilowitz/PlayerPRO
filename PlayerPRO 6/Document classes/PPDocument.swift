@@ -133,18 +133,27 @@ import AudioToolbox
 			}
 			insWindow.setFrameOrigin(origin)
 		}
+	}
 
-		// NSDocument shows window controllers in the order they were added,
-		// each via its own showWindow(_:)/makeKeyAndOrderFront -- so
-		// instrumentList (added second, above) ends up key, not the main
-		// document window. Every menu item whose action lives on
-		// DocumentWindowController (Instruments List, Partition List, etc.)
-		// is validated against the key window's responder chain, so with
-		// the instrument panel key they all show up grayed out until the
-		// user happens to click the document window themselves. Re-key the
-		// document window explicitly so the menu bar is correct from the
-		// moment a document opens.
-		docWinCon.window?.makeKeyAndOrderFront(self)
+	// NSDocument shows every window controller's window in turn -- the
+	// instrument panel (added second in makeWindowControllers(), above) ends
+	// up key, not the main document window. Every menu item whose action
+	// lives on DocumentWindowController (Instruments List, Partition List,
+	// etc.) is validated against the key window's responder chain, so with
+	// the instrument panel key they all show up grayed out. A one-shot fix
+	// at the end of makeWindowControllers() isn't reliable: NSDocumentController's
+	// own openDocument(withContentsOf:...) calls showWindows() itself right
+	// after makeWindowControllers() returns, undoing it -- and did so
+	// inconsistently depending on how long read(from:ofType:) took, which is
+	// why a fast native-format open could look fixed while a
+	// plugin-mediated one (e.g. a non-native "Viewer" role type like .madh,
+	// read through MADH.ppimpexp) still came up grayed. Overriding
+	// showWindows() instead covers every caller uniformly: a plain
+	// NSDocumentController open of any type, AppDelegate's manual open path
+	// for Classic Application imports, and a brand new document.
+	override func showWindows() {
+		super.showWindows()
+		mainViewController?.window?.makeKeyAndOrderFront(self)
 	}
 
 	/// Shows this document's piano keyboard window, creating it on first use.

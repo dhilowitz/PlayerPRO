@@ -463,15 +463,11 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 
 								self.addDocument(aPPDoc)
 								aPPDoc.makeWindowControllers()
+								// PPDocument.showWindows() re-keys the document window itself
+								// afterward, so the instrument panel (shown second, here and in
+								// every other open path) doesn't end up stealing key status and
+								// graying out DocumentWindowController's menu items.
 								aPPDoc.showWindows()
-								// showWindows() shows every window controller's window in turn --
-								// docWinCon then the instrument panel -- so the instrument panel ends
-								// up key, re-disabling every DocumentWindowController-hosted menu item
-								// (Instruments List, Partition List) the same way an unpatched
-								// makeWindowControllers() did. makeWindowControllers() already re-keys
-								// the document window for its own call path, but showWindows() here
-								// runs after and undoes it, so it needs re-asserting again.
-								aPPDoc.mainViewController.window?.makeKeyAndOrderFront(self)
 								// This path builds the document by hand instead of going through
 								// NSDocumentController's open machinery (openDocument(withContentsOf:...)
 								// below does this automatically), so nothing added theURL1 to Open
