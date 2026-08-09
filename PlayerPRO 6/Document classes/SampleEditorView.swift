@@ -43,7 +43,10 @@ final class SampleEditorView: NSView {
 	/// it only ever asks for a named mutation to be committed. Mutation
 	/// closures act on the freshly-resolved canonical PPSampleObject
 	/// commitEdit re-fetches internally, not on any object this view holds.
-	var commitDataEdit: ((_ name: String, _ mutate: @escaping (PPSampleObject) -> Void) -> Void)?
+	/// Used for both data edits (Delete/Paste) and loop edits -- the commit
+	/// side is identical either way, only the undo payload differs (see
+	/// performDataEdit vs performLoopEdit).
+	var commitMutation: ((_ name: String, _ mutate: @escaping (PPSampleObject) -> Void) -> Void)?
 
 	/// Horizontal zoom: pixels of view width per byte of sample data. See
 	/// invalidateSize()/zoomToFit() (added with the zoom UI).
@@ -52,6 +55,19 @@ final class SampleEditorView: NSView {
 	private let waveformColorChannel0 = NSColor.systemRed
 	private let waveformColorChannel1 = NSColor.systemBlue.withAlphaComponent(0.75)
 	private let selectionColor = NSColor.selectedTextBackgroundColor.withAlphaComponent(0.4)
+	private let loopColor = NSColor(calibratedRed: 0.2, green: 0.1, blue: 0.5, alpha: 0.8)
+
+	// MARK: Loop markers
+	//
+	// This format's sData struct has one loop (loopBeg/loopSize/loopType),
+	// not a separate sustain loop -- there's nothing else in PPSampleObject's
+	// API to add a marker for.
+
+	private enum LoopMarker { case begin, end }
+	private var draggingMarker: LoopMarker?
+	private var dragOriginalLoopBegin: Int32 = 0
+	private var dragOriginalLoopSize: Int32 = 0
+	private static let markerHitTolerance: CGFloat = 4
 
 	// MARK: Selection
 	//
@@ -137,6 +153,18 @@ final class SampleEditorView: NSView {
 			selectionColor.setFill()
 			NSRect(x: x0, y: bounds.minY, width: x1 - x0, height: bounds.height).fill()
 		}
+
+		if samp.loopSize != 0 {
+			loopColor.setStroke()
+			let path = NSBezierPath()
+			path.lineWidth = 2
+			for byteOffset in [Int(samp.loopBegin), Int(samp.loopBegin) + Int(samp.loopSize)] {
+				let x = viewX(forByteOffset: byteOffset)
+				path.move(to: NSPoint(x: x, y: bounds.minY))
+				path.line(to: NSPoint(x: x, y: bounds.maxY))
+			}
+			path.stroke()
+		}
 	}
 
 	// MARK: Byte-offset math (inverse of drawSample's domain math)
@@ -173,19 +201,70 @@ final class SampleEditorView: NSView {
 
 	// MARK: Mouse
 
+	private func hitTestLoopMarker(at p: NSPoint) -> LoopMarker? {
+		guard let samp = sampleObject, samp.loopSize != 0 else { return nil }
+		let beginX = viewX(forByteOffset: Int(samp.loopBegin))
+		let endX = viewX(forByteOffset: Int(samp.loopBegin) + Int(samp.loopSize))
+		if abs(p.x - beginX) <= Self.markerHitTolerance { return .begin }
+		if abs(p.x - endX) <= Self.markerHitTolerance { return .end }
+		return nil
+	}
+
 	override func mouseDown(with event: NSEvent) {
 		window?.makeFirstResponder(self)
 		let p = convert(event.locationInWindow, from: nil)
+
+		if let marker = hitTestLoopMarker(at: p), let samp = sampleObject {
+			draggingMarker = marker
+			dragOriginalLoopBegin = samp.loopBegin
+			dragOriginalLoopSize = samp.loopSize
+			return
+		}
+
 		dragAnchorByte = byteOffset(forViewX: p.x)
 		selection = NSRange(location: dragAnchorByte, length: 0)
 	}
 
 	override func mouseDragged(with event: NSEvent) {
 		let p = convert(event.locationInWindow, from: nil)
+
+		if let marker = draggingMarker, let samp = sampleObject {
+			let here = byteOffset(forViewX: p.x)
+			// Live visual feedback only -- mutates the view's own held
+			// PPSampleObject directly (safe: its setters write into its own
+			// private buffer, per PPSampleObject.m), no undo/commit per
+			// mouse-move event. mouseUp commits once, matching this
+			// codebase's existing instinct of never spamming undo per pixel.
+			switch marker {
+			case .begin:
+				let end = Int(samp.loopBegin) + Int(samp.loopSize)
+				let newBegin = min(here, end - frameSize)
+				samp.loopBegin = Int32(max(newBegin, 0))
+				samp.loopSize = Int32(end - Int(samp.loopBegin))
+			case .end:
+				let newEnd = max(here, Int(samp.loopBegin) + frameSize)
+				samp.loopSize = Int32(newEnd - Int(samp.loopBegin))
+			}
+			needsDisplay = true
+			return
+		}
+
 		let here = byteOffset(forViewX: p.x)
 		selection = here >= dragAnchorByte
 			? NSRange(location: dragAnchorByte, length: here - dragAnchorByte)
 			: NSRange(location: here, length: dragAnchorByte - here)
+	}
+
+	override func mouseUp(with event: NSEvent) {
+		guard draggingMarker != nil, let samp = sampleObject else { return }
+		draggingMarker = nil
+		let newBegin = samp.loopBegin, newSize = samp.loopSize
+		guard newBegin != dragOriginalLoopBegin || newSize != dragOriginalLoopSize else { return }
+		// The live-feedback drag above already mutated the object directly;
+		// re-apply the same final values through performLoopEdit so the
+		// commit/undo/write-through path runs exactly once, on release.
+		performLoopEdit(oldBegin: dragOriginalLoopBegin, oldSize: dragOriginalLoopSize,
+						 newBegin: newBegin, newSize: newSize)
 	}
 
 	// MARK: Delete
@@ -223,9 +302,24 @@ final class SampleEditorView: NSView {
 		// the same trap already found and fixed once in
 		// PatternListWindowController for patternName.
 		let oldData: Data = samp.data ?? Data()
-		commitDataEdit?(name) { $0.data = newData }
+		commitMutation?(name) { $0.data = newData }
 		effectiveUndoManager?.registerUndo(withTarget: self) { target in
 			target.performDataEdit(name, newData: oldData)
+		}
+		effectiveUndoManager?.setActionName(name)
+	}
+
+	/// Same self-composing register-undo-inside-the-restore shape as
+	/// performDataEdit, but the payload is two Int32s instead of a full
+	/// buffer snapshot -- a loop move never touches .data, so there's
+	/// nothing expensive to snapshot. Still funnels through the same
+	/// commitMutation choke point as a data edit, since both mutate fields
+	/// PPInstrumentObject.m's write-through fix covers.
+	private func performLoopEdit(oldBegin: Int32, oldSize: Int32, newBegin: Int32, newSize: Int32) {
+		let name = NSLocalizedString("Move Loop Point", comment: "sample editor undo action name")
+		commitMutation?(name) { $0.loopBegin = newBegin; $0.loopSize = newSize }
+		effectiveUndoManager?.registerUndo(withTarget: self) { target in
+			target.performLoopEdit(oldBegin: newBegin, oldSize: newSize, newBegin: oldBegin, newSize: oldSize)
 		}
 		effectiveUndoManager?.setActionName(name)
 	}

@@ -75,7 +75,7 @@ final class SampleEditorWindowController: NSWindowController {
 		self.theDriver = document.theDriver
 
 		editorView.editUndoManager = document.undoManager
-		editorView.commitDataEdit = { [weak self] name, mutate in
+		editorView.commitMutation = { [weak self] name, mutate in
 			self?.commitEdit(name, mutate)
 		}
 
