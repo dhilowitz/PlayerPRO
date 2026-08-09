@@ -21,13 +21,41 @@ final class WaveformRenderer {
 		var max: Int8
 	}
 
-	private let driver: PPDriver
+	private let music: PPMusicObject
+	private let library: PPLibrary
+	/// Kept only to read back the live outPutRate a caller may have changed
+	/// via renderPeaks (see below) -- each render pass now builds its own
+	/// fresh driver rather than reusing one across channels, so this is no
+	/// longer "the" driver, just the last rate requested.
+	private var outPutRate: UInt32
 	let totalChannels: Int
 
 	init?(music: PPMusicObject, library: PPLibrary) {
 		let channels = music.totalTracks
 		guard channels > 0 else { return nil }
 
+		self.music = music
+		self.library = library
+		self.outPutRate = MADDriverSettings.new().outPutRate
+		self.totalChannels = channels
+	}
+
+	/// Builds a fresh driver with this renderer's fixed settings (8-bit,
+	/// DeluxeStereoOutPut -- see the class-level doc comment for why) plus
+	/// whatever outPutRate is currently in effect. A fresh driver per call
+	/// is deliberate, not incidental: BytesToRemoveAtEnd (MainDriver.c),
+	/// which -[PPDriver directSave] trusts to size its returned NSData, is
+	/// only ever reset inside NoteAnalyse at a pattern/order-list end, and
+	/// otherwise carries over from whatever the last render happened to
+	/// leave it at. Reusing one driver across renderPeaks' per-channel loop
+	/// meant that once any channel's render hit a pattern end, the next
+	/// channel's very first directSave() call allocated an undersized
+	/// buffer against that stale leftover value while the mixer wrote its
+	/// full untrimmed size into it -- a real heap overflow, confirmed as
+	/// the cause of a crash reported switching to this tab. A brand new
+	/// PPDriver starts that field at 0, so this can't happen regardless of
+	/// how the previous render ended.
+	private func makeDriver() -> PPDriver? {
 		var settings = MADDriverSettings.new()
 		settings.driverMode = .NoHardwareDriver
 		settings.outPutBits = 8
@@ -39,12 +67,12 @@ final class WaveformRenderer {
 		// didn't crash, so per-channel isolation is done below by muting all
 		// but one channel and rendering the otherwise-mixed stereo output.
 		settings.outPutMode = .DeluxeStereoOutPut
-		settings.numChn = Int16(channels)
+		settings.numChn = Int16(totalChannels)
+		settings.outPutRate = outPutRate
 
 		guard let driver = try? PPDriver(library: library, settings: &settings) else { return nil }
 		driver.currentMusic = music
-		self.driver = driver
-		self.totalChannels = channels
+		return driver
 	}
 
 	/// Peak columns for every channel, covering pattern rows
@@ -58,15 +86,18 @@ final class WaveformRenderer {
 			return Array(repeating: [], count: totalChannels)
 		}
 
-		var settings = driver.driverSettings
-		if settings.outPutRate != sampleRate {
-			settings.outPutRate = sampleRate
-			_ = try? driver.changeDriverSettings(to: &settings)
-		}
+		outPutRate = sampleRate
 
 		var result = [[Peak]](repeating: [], count: totalChannels)
 
 		for channel in 0..<totalChannels {
+			// A fresh driver per channel -- see makeDriver()'s doc comment
+			// for why this isn't just "simpler," it's the actual fix for a
+			// real heap-overflow crash. Muting/stop/seek/play state below is
+			// therefore all local to this one channel's driver, not shared
+			// across iterations the way it was before.
+			guard let driver = makeDriver() else { continue }
+
 			for other in 0..<totalChannels {
 				driver.setChannel(at: other, toActive: other == channel)
 			}
@@ -89,13 +120,6 @@ final class WaveformRenderer {
 			}
 
 			result[channel] = WaveformRenderer.peaks(from: data, columns: columns)
-		}
-
-		// Leave this (private, offline-only) driver all-active so a later
-		// render pass doesn't start out already muted from the last channel
-		// rendered. Never touches the live driver's own mute state.
-		for other in 0..<totalChannels {
-			driver.setChannel(at: other, toActive: true)
 		}
 
 		return result
