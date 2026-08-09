@@ -779,8 +779,25 @@ static const dispatch_block_t initUTIArray = ^{
 	object = [object copy];
 	object.sampleIndex = index;
 	object.instrumentIndex = number;
-	
+
 	samples[index] = object;
+	if (_theMus) {
+		// Same write-through -addSamplesObject: already does above -- without
+		// this, "replace" only ever updated the Cocoa-side samples array.
+		// PPMusicObject.write(to:ofType:) serializes music->sample[...]
+		// directly, and live playback reads it through the driver, neither
+		// of which ever look at this array -- so a committed sample edit
+		// looked correct in the UI and then silently vanished on save or
+		// during playback. Same bug shape as
+		// PPPatternObject.writeThroughCommand:position:channel:.
+		NSInteger slot = writebackAddr->firstSample + index;
+		sData *existing = _theMus._currentMusic->sample[slot];
+		if (existing) {
+			free(existing->data);
+			free(existing);
+		}
+		_theMus._currentMusic->sample[slot] = [object createSData];
+	}
 }
 
 - (NSInteger)countOfSamples
