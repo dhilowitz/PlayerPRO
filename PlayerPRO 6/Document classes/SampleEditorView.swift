@@ -229,4 +229,81 @@ final class SampleEditorView: NSView {
 		}
 		effectiveUndoManager?.setActionName(name)
 	}
+
+	// MARK: Clipboard
+	//
+	// A new lightweight type carrying raw bytes plus format metadata --
+	// deliberately NOT the existing whole-sample net.sourceforge.playerpro.sData
+	// UTI (PPSampleObject's own NSSecureCoding/pasteboard conformance),
+	// which archives an entire sample object (name, loop points, slot
+	// indices) via NSKeyedArchiver. A selection is a sub-range of bytes, not
+	// a sample -- modeled on PatternGridView's own clipboard (its `Block`/
+	// encode(_:)/decode(_:)), which solves the identical "copy a sub-range
+	// with format metadata" problem for pattern cells.
+
+	@objc static let pasteboardType = NSPasteboard.PasteboardType("com.quadmation.playerpro.sampledata")
+
+	private struct Fragment {
+		var amplitude: MADByte
+		var stereo: Bool
+		var bytes: Data
+	}
+
+	private func encode(_ fragment: Fragment) -> Data {
+		var out = Data()
+		var amp = Int32(fragment.amplitude)
+		var stereoFlag = Int32(fragment.stereo ? 1 : 0)
+		withUnsafeBytes(of: &amp) { out.append(contentsOf: $0) }
+		withUnsafeBytes(of: &stereoFlag) { out.append(contentsOf: $0) }
+		out.append(fragment.bytes)
+		return out
+	}
+
+	private func decode(_ data: Data) -> Fragment? {
+		let headerSize = MemoryLayout<Int32>.size * 2
+		guard data.count >= headerSize else { return nil }
+		let amp = data.withUnsafeBytes { $0.load(fromByteOffset: 0, as: Int32.self) }
+		let stereoFlag = data.withUnsafeBytes { $0.load(fromByteOffset: 4, as: Int32.self) }
+		let bytes = data.subdata(in: data.index(data.startIndex, offsetBy: headerSize)..<data.endIndex)
+		return Fragment(amplitude: MADByte(amp), stereo: stereoFlag != 0, bytes: bytes)
+	}
+
+	@objc func copy(_ sender: Any?) {
+		guard let samp = sampleObject, selection.length > 0,
+			  let data: Data = samp.data, let range = Range(selection) else { return }
+		let fragment = Fragment(amplitude: samp.amplitude, stereo: samp.isStereo, bytes: data.subdata(in: range))
+		let pb = NSPasteboard.general
+		pb.clearContents()
+		pb.setData(encode(fragment), forType: Self.pasteboardType)
+	}
+
+	@objc func cut(_ sender: Any?) {
+		copy(sender)
+		deleteSelection()
+	}
+
+	@objc func paste(_ sender: Any?) {
+		guard let samp = sampleObject,
+			  let pbData = NSPasteboard.general.data(forType: Self.pasteboardType),
+			  let fragment = decode(pbData) else { return }
+
+		// Refuse a format mismatch rather than attempt an implicit bit-depth/
+		// channel-count conversion -- that's real DSP, out of scope for this
+		// pass alongside the deferred FFT work. Same-format paste (by far
+		// the common case) works immediately.
+		guard fragment.amplitude == samp.amplitude, fragment.stereo == samp.isStereo else {
+			NSSound.beep()
+			return
+		}
+
+		var newData: Data = samp.data ?? Data()
+		if selection.length > 0, let range = Range(selection) {
+			newData.replaceSubrange(range, with: fragment.bytes)
+		} else {
+			let insertAt = newData.index(newData.startIndex, offsetBy: min(selection.location, newData.count))
+			newData.insert(contentsOf: fragment.bytes, at: insertAt)
+		}
+		performDataEdit(NSLocalizedString("Paste", comment: "sample editor undo action name"), newData: newData)
+		selection = NSRange(location: selection.location + fragment.bytes.count, length: 0)
+	}
 }
