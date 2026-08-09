@@ -11,6 +11,21 @@
 #include "RDriverInt.h"
 #include "MADPrivate.h"
 
+// True if any channel currently has live sample data to render, regardless
+// of Reading (the transport play/stop flag) -- lets a one-shot preview
+// triggered via MADPlaySoundData (instrument list Play, piano keyboard, Box
+// editor note audition) be heard while the transport is stopped, without
+// letting the sequencer itself advance (that's still gated on Reading
+// throughout Interrupt.c/NoteAnalyse).
+static bool CAAnyChannelActive(MADDriverRec *theRec)
+{
+	for (int i = 0; i < theRec->MultiChanNo; i++) {
+		if (!MADDriverChannelIsDonePlaying(theRec, i))
+			return true;
+	}
+	return false;
+}
+
 //TODO: we should probably do something to prevent thread contention
 static OSStatus CAAudioCallback(void						*inRefCon,
 								AudioUnitRenderActionFlags	*ioActionFlags,
@@ -23,33 +38,45 @@ static OSStatus CAAudioCallback(void						*inRefCon,
 	AudioBuffer	*abuf;
 	void		*ptr;
 	UInt32		i = 0;
-	
+
 	MADDriverRec *theRec = (MADDriverRec*)inRefCon;
-	if (theRec->base.Reading == false) {
+	if (!(theRec->base.Reading || CAAnyChannelActive(theRec))) {
 		switch(theRec->DriverSettings.outPutBits) {
 			case 8:
 				memset(theRec->CABuffer, 0x80, theRec->BufSize);
 				break;
-				
+
 			default:
 			case 16:
 				memset(theRec->CABuffer, 0, theRec->BufSize);
 				break;
 		}
 	}
-	
+
 	for (i = 0; i < ioData->mNumberBuffers; i++) {
 		abuf = &ioData->mBuffers[i];
 		remaining = abuf->mDataByteSize;
 		ptr = abuf->mData;
 		while (remaining > 0) {
 			if (theRec->CABufOff >= theRec->BufSize) {
-				if (!MADDirectSave(theRec->CABuffer, NULL, theRec)) {
+				// Reading uses MADDirectSave, preserving its existing
+				// musicEnd-driven auto-stop behavior exactly; a preview
+				// while stopped uses MADDirectSaveAlways (an exact twin of
+				// MADDirectSave minus its "return false while !Reading"
+				// gate), since there's no song-end condition to honor when
+				// nothing is actually playing. Re-checked here rather than
+				// reusing the top-of-callback result, since a preview note
+				// can finish mid-callback, between buffer refills.
+				bool shouldMix = theRec->base.Reading || CAAnyChannelActive(theRec);
+				bool didMix = theRec->base.Reading
+					? MADDirectSave(theRec->CABuffer, NULL, theRec)
+					: (shouldMix && MADDirectSaveAlways(theRec->CABuffer, NULL, theRec));
+				if (!didMix) {
 					switch(theRec->DriverSettings.outPutBits) {
 						case 8:
 							memset(theRec->CABuffer, 0x80, theRec->BufSize);
 							break;
-							
+
 						case 16:
 						default:
 							memset(theRec->CABuffer, 0, theRec->BufSize);
