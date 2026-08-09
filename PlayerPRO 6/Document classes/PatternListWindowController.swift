@@ -40,6 +40,14 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 	private static let positionColumnID = NSUserInterfaceItemIdentifier("position")
 	private static let patternColumnID = NSUserInterfaceItemIdentifier("pattern")
 
+	// See PianoWindowController's identical override for why this is
+	// needed: addWindowController puts this under the document's automatic
+	// title sync, which would otherwise overwrite the title set below with
+	// just the document's own display name.
+	override func windowTitle(forDocumentDisplayName displayName: String) -> String {
+		return String(format: NSLocalizedString("Pattern List (%@)", comment: "pattern list window title, %@ is the document name"), displayName)
+	}
+
 	convenience init() {
 		let contentRect = NSRect(x: 0, y: 0, width: 320, height: 420)
 		let window = NSWindow(contentRect: contentRect,

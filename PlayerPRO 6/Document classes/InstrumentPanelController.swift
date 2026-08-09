@@ -18,8 +18,16 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	weak var filterHandler: FilterPlugHandler!
 	weak var theDriver: PPDriver!
 	
+	// addWindowController (PPDocument.swift) puts this controller under the
+	// document's automatic synchronizeWindowTitleWithDocumentName(), which
+	// would otherwise overwrite InsPanel.xib's "Instruments" window title
+	// with just the document's own display name.
+	override func windowTitle(forDocumentDisplayName displayName: String) -> String {
+		return String(format: NSLocalizedString("Instruments (%@)", comment: "instrument panel window title, %@ is the document name"), displayName)
+	}
+
 	func colorsDidChange(_ aNot: Notification) {
-		
+
 	}
 	
 	@IBAction func playSample(_ sender: AnyObject!) {

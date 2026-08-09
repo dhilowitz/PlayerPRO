@@ -35,6 +35,19 @@ final class SampleEditorWindowController: NSWindowController {
 		instrument.samplesObject(at: sampleIndex)
 	}
 
+	// addWindowController (PPDocument.swift's showSampleEditor(for:sampleIndex:))
+	// puts this controller under the document's automatic
+	// synchronizeWindowTitleWithDocumentName(), which otherwise silently
+	// overwrites any title set elsewhere (e.g. configure(), below) with
+	// just the document's own display name -- this is the documented hook
+	// for a window controller to have a say in that instead.
+	override func windowTitle(forDocumentDisplayName displayName: String) -> String {
+		let rawName: String = sample.name ?? ""
+		let sampleName = rawName.isEmpty ? NSLocalizedString("Untitled", comment: "unnamed sample") : rawName
+		return String(format: NSLocalizedString("Sample Editor (%@ \u{203A} %@)", comment: "sample editor window title: document name, sample name"),
+					  displayName, sampleName)
+	}
+
 	convenience init() {
 		let contentWidth: CGFloat = 640
 		let stripHeight: CGFloat = 30
@@ -159,10 +172,10 @@ final class SampleEditorWindowController: NSWindowController {
 			self?.commitEdit(name, mutate)
 		}
 
-		let samp = sample
-		window?.title = String(format: NSLocalizedString("%d - %@", comment: "sample editor window title: index - name"),
-								sampleIndex, samp.name.isEmpty ? NSLocalizedString("Untitled", comment: "unnamed sample") : samp.name)
-		editorView.sampleObject = samp
+		// Title is handled by windowTitle(forDocumentDisplayName:) above,
+		// not set directly here -- addWindowController's automatic title
+		// sync would just overwrite a direct assignment anyway.
+		editorView.sampleObject = sample
 		editorView.zoomToFit()
 	}
 

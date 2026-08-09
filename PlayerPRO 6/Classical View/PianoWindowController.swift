@@ -35,6 +35,15 @@ class PianoWindowController: NSWindowController {
 		set { pianoView.noteEntered = newValue }
 	}
 
+	// addWindowController (PPDocument.swift) puts this controller under the
+	// document's automatic synchronizeWindowTitleWithDocumentName(), which
+	// otherwise silently overwrites the title set in convenience init()
+	// above with just the document's own display name -- overriding this
+	// is the documented hook for a window controller to have a say in that.
+	override func windowTitle(forDocumentDisplayName displayName: String) -> String {
+		return String(format: NSLocalizedString("Piano (%@)", comment: "piano window title, %@ is the document name"), displayName)
+	}
+
 	convenience init() {
 		let contentWidth: CGFloat = 700
 		let stripHeight: CGFloat = 30
