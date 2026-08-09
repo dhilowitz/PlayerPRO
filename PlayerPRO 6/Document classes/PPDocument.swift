@@ -168,9 +168,20 @@ import AudioToolbox
 				self?.mainViewController.enterPianoNote(note)
 			}
 			pianoWindow = piano
+			// Registers this window with NSDocument, which is what puts self
+			// (PPDocument) into ITS responder chain too -- without this, the
+			// Piano window itself being key would leave every
+			// PPDocument-hosted menu action (including this one) unable to
+			// validate, the same problem this whole set of actions was moved
+			// here to fix in the first place.
+			addWindowController(piano)
 		}
 		piano.showWindow(self)
 		piano.window?.makeKeyAndOrderFront(self)
+	}
+
+	@IBAction func showPiano(_ sender: AnyObject!) {
+		showPiano()
 	}
 
 	/// Shows this document's pattern (order) list window, creating it on
@@ -183,10 +194,24 @@ import AudioToolbox
 			list = PatternListWindowController()
 			list.currentDocument = self
 			patternListWindow = list
+			addWindowController(list)
 		}
 		list.reload()
 		list.showWindow(self)
 		list.window?.makeKeyAndOrderFront(self)
+	}
+
+	@IBAction func showPatternList(_ sender: AnyObject!) {
+		showPatternList()
+	}
+
+	// Instruments > Instruments List (MainMenu.xib, keyEquivalent "l") --
+	// the instrument panel already exists per-document
+	// (PPDocument.instrumentList, shown alongside the main window since
+	// makeWindowControllers), it can just be behind other windows.
+	@IBAction func showInstrumentsList(_ sender: AnyObject!) {
+		instrumentList?.showWindow(sender)
+		instrumentList?.window?.makeKeyAndOrderFront(sender)
 	}
 
 	private func resetPlayerPRODriver() {

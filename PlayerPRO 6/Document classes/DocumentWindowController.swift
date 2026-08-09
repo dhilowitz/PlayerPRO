@@ -69,28 +69,16 @@ class DocumentWindowController: NSWindowController {
 		editorsTab.selectTabViewItem(withIdentifier: "Wave")
 	}
 
-	@IBAction func showPiano(_ sender: AnyObject!) {
-		currentDocument.showPiano()
-	}
-
-	// Instruments > Instruments List (MainMenu.xib, keyEquivalent "l") was
-	// always grayed out: its action, showInstrumentsList:, only existed on
-	// PlayerPRO Player's app delegate (a different target entirely), so
-	// AppKit's automatic menu validation correctly found nothing in the
-	// responder chain that answered to it and disabled the item. The
-	// instrument panel already exists per-document (PPDocument.instrumentList,
-	// shown alongside the main window since makeWindowControllers) -- it can
-	// just be behind other windows, so this brings it forward.
-	@IBAction func showInstrumentsList(_ sender: AnyObject!) {
-		currentDocument.instrumentList?.showWindow(sender)
-		currentDocument.instrumentList?.window?.makeKeyAndOrderFront(sender)
-	}
-
-	// Patterns > Partition List (MainMenu.xib) -- the order-list window,
-	// see PatternListWindowController and PATTERN-LIST-SPEC.md.
-	@IBAction func showPatternList(_ sender: AnyObject!) {
-		currentDocument.showPatternList()
-	}
+	// showPiano(_:)/showInstrumentsList(_:)/showPatternList(_:) used to live
+	// here, but a menu item wired to target -1 (First Responder) only
+	// validates against the KEY window's responder chain -- and that chain
+	// only reaches this class from the main document window itself, not
+	// from the document's other windows (Instrument Panel, Piano, Pattern
+	// List). Whichever of those happened to be focused, all three menu
+	// items showed up grayed out. Moved to PPDocument, which (via
+	// addWindowController) sits in the responder chain of every window that
+	// belongs to this document, so they now validate correctly no matter
+	// which of the document's windows is currently key. See PPDocument.swift.
 
 	/// The piano keyboard's bridge into whichever pattern grid is currently
 	/// recording. classicalController hosts the grid despite its name -- see
