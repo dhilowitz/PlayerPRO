@@ -956,7 +956,12 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 
 - (NSInteger)countOfInstruments
 {
-	return [_instruments count];
+	// -instruments lazily builds _instruments on first access (see its own
+	// comment above) -- reading the ivar directly returned 0 for a document
+	// that had never had -instruments called on it yet, even though a real,
+	// fully-populated instrument list existed underneath. Same trap fixed
+	// below for -countOfPatterns.
+	return [self instruments].count;
 }
 
 - (PPInstrumentObject*)instrumentsObjectAtIndex:(NSInteger)idx
@@ -989,7 +994,12 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 
 - (NSInteger)countOfPatterns
 {
-	return [_patterns count];
+	// -patterns lazily builds _patterns on first access -- reading the ivar
+	// directly returned 0 for a freshly-loaded document that had never had
+	// -patterns called on it yet, even though the song had real patterns.
+	// Confirmed with a standalone harness against TestMADK.madk: this
+	// returned 0 while -patterns.count returned 7 on the same object.
+	return [self patterns].count;
 }
 
 - (nullable PPPatternObject *)addPattern
