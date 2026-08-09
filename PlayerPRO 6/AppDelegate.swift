@@ -449,11 +449,23 @@ class AppDelegate: NSDocumentController, NSApplicationDelegate {
 								}
 							} else if let ourObject = ourObject {
 								let aPPDoc = PPDocument(music: ourObject)
-								
+								// Set before makeWindowControllers()/showWindows(): addWindowController
+								// synchronizes the window's title against displayName immediately, so
+								// setting this afterward (as before) left the window titled with
+								// whatever auto-numbered "Untitled N" it got assigned in the meantime.
+								aPPDoc.displayName = theURL1.deletingPathExtension().lastPathComponent
+
 								self.addDocument(aPPDoc)
 								aPPDoc.makeWindowControllers()
 								aPPDoc.showWindows()
-								aPPDoc.displayName = theURL1.deletingPathExtension().lastPathComponent
+								// showWindows() shows every window controller's window in turn --
+								// docWinCon then the instrument panel -- so the instrument panel ends
+								// up key, re-disabling every DocumentWindowController-hosted menu item
+								// (Instruments List, Partition List) the same way an unpatched
+								// makeWindowControllers() did. makeWindowControllers() already re-keys
+								// the document window for its own call path, but showWindows() here
+								// runs after and undoes it, so it needs re-asserting again.
+								aPPDoc.mainViewController.window?.makeKeyAndOrderFront(self)
 							} else {
 								fatalError("Either ourObject or anErr should be nil, not both!")
 							}

@@ -94,19 +94,24 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 
 		var x: CGFloat = 6
 
+		// .rounded's fixed corner/padding needs more than ~28pt to center a
+		// single glyph without clipping it -- 28pt rendered "+" only half
+		// visible. 34pt (matching the button's own height) gives it room.
+		let buttonSize: CGFloat = 34
+
 		let add = NSButton(title: "+", target: self, action: #selector(addPosition))
 		add.bezelStyle = .rounded
-		add.frame = NSRect(x: x, y: 4, width: 28, height: 22)
+		add.frame = NSRect(x: x, y: 4, width: buttonSize, height: 22)
 		strip.addSubview(add)
 		addButton = add
-		x += 30
+		x += buttonSize + 2
 
 		let remove = NSButton(title: "\u{2212}", target: self, action: #selector(removePosition))
 		remove.bezelStyle = .rounded
-		remove.frame = NSRect(x: x, y: 4, width: 28, height: 22)
+		remove.frame = NSRect(x: x, y: 4, width: buttonSize, height: 22)
 		strip.addSubview(remove)
 		removeButton = remove
-		x += 34
+		x += buttonSize + 6
 
 		let label = NSTextField(labelWithString: NSLocalizedString("Length:", comment: "order list length label"))
 		label.frame = NSRect(x: x, y: 7, width: 46, height: 17)
@@ -176,7 +181,15 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 			popup.tag = row
 			for pattern in music.patterns {
 				guard let pattern = pattern as? PPPatternObject else { continue }
-				let name = pattern.patternName.isEmpty ? NSLocalizedString("Untitled", comment: "unnamed pattern") : pattern.patternName
+				// patternName is a null_resettable NSString property, imported
+				// into Swift as an implicitly-unwrapped optional -- composing it
+				// in a ternary with a plain String (NSLocalizedString's return
+				// type) keeps it Optional<String> rather than auto-unwrapping,
+				// so interpolating it directly printed "Optional("Untitled")"
+				// instead of "Untitled". Give it an explicit String type up
+				// front so there's no ambiguity left for the ternary to widen.
+				let rawName: String = pattern.patternName ?? ""
+				let name = rawName.isEmpty ? NSLocalizedString("Untitled", comment: "unnamed pattern") : rawName
 				popup.addItem(withTitle: "\(pattern.index): \(name)")
 			}
 			let currentID = Int(music.patternID(atOrderListPosition: row))
