@@ -72,21 +72,21 @@ final class SampleEditorWindowController: NSWindowController {
 	private func buildControlStrip(_ strip: NSView) {
 		let zoomOut = NSButton(title: "\u{2212}", target: editorView, action: #selector(SampleEditorView.zoomOut))
 		zoomOut.bezelStyle = .rounded
-		zoomOut.frame = NSRect(x: 6, y: 4, width: 28, height: 22)
+		zoomOut.frame = NSRect(x: 6, y: 4, width: 34, height: 22)
 		strip.addSubview(zoomOut)
 
 		let zoomIn = NSButton(title: "+", target: editorView, action: #selector(SampleEditorView.zoomIn))
 		zoomIn.bezelStyle = .rounded
-		zoomIn.frame = NSRect(x: 38, y: 4, width: 28, height: 22)
+		zoomIn.frame = NSRect(x: 44, y: 4, width: 34, height: 22)
 		strip.addSubview(zoomIn)
 
 		let fit = NSButton(title: NSLocalizedString("Fit", comment: "sample editor zoom-to-fit button"),
 							target: editorView, action: #selector(SampleEditorView.zoomToFit))
 		fit.bezelStyle = .rounded
-		fit.frame = NSRect(x: 70, y: 4, width: 44, height: 22)
+		fit.frame = NSRect(x: 82, y: 4, width: 44, height: 22)
 		strip.addSubview(fit)
 
-		let filters = NSPopUpButton(frame: NSRect(x: 122, y: 3, width: 180, height: 24), pullsDown: true)
+		let filters = NSPopUpButton(frame: NSRect(x: 134, y: 3, width: 180, height: 24), pullsDown: true)
 		filters.addItem(withTitle: NSLocalizedString("Filters", comment: "sample editor filters popup title"))
 		let handler = (AppDelegate.shared as! AppDelegate).filterHandler
 		for plug in handler.plugInArray {

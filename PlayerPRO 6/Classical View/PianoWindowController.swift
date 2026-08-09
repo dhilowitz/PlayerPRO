@@ -72,16 +72,16 @@ class PianoWindowController: NSWindowController {
 	private func buildControlStrip(_ strip: NSView) {
 		let left = NSButton(title: "◀", target: self, action: #selector(shiftOctaveDown))
 		left.bezelStyle = .rounded
-		left.frame = NSRect(x: 6, y: 4, width: 28, height: 22)
+		left.frame = NSRect(x: 6, y: 4, width: 34, height: 22)
 		strip.addSubview(left)
 
 		let right = NSButton(title: "▶", target: self, action: #selector(shiftOctaveUp))
 		right.bezelStyle = .rounded
-		right.frame = NSRect(x: 38, y: 4, width: 28, height: 22)
+		right.frame = NSRect(x: 44, y: 4, width: 34, height: 22)
 		strip.addSubview(right)
 
 		let label = NSTextField(labelWithString: "")
-		label.frame = NSRect(x: 74, y: 6, width: 220, height: 18)
+		label.frame = NSRect(x: 86, y: 6, width: 220, height: 18)
 		strip.addSubview(label)
 		octaveLabel = label
 		updateOctaveLabel()
