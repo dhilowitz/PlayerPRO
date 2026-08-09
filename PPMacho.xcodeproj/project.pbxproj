@@ -544,6 +544,8 @@
 		55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A3CD4319A6DC8B00957845 /* PPDocument.swift */; };
 		55FA20102DA0000300000010 /* PPLastDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA200F2DA000030000000F /* PPLastDirectory.swift */; };
 		55FA20122DA0000300000012 /* PatternListWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20112DA0000300000011 /* PatternListWindowController.swift */; };
+		1C019059242A42C598FB8364 /* SampleEditorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4E5F1D1B7846319AEFE0FD /* SampleEditorWindowController.swift */; };
+		563E91D45F8E45159469FAAD /* SampleEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A50A5966C96457698FB2D82 /* SampleEditorView.swift */; };
 		55A6201818A6EFEA003B29B5 /* PreferenceNames.strings in Resources */ = {isa = PBXBuildFile; fileRef = 55A6201B18A6EFEA003B29B5 /* PreferenceNames.strings */; };
 		55A6201918A6EFEA003B29B5 /* PreferenceNames.strings in Resources */ = {isa = PBXBuildFile; fileRef = 55A6201B18A6EFEA003B29B5 /* PreferenceNames.strings */; };
 		55A9351917F28F9700493DC5 /* Shared.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55A9351817F28F9700493DC5 /* Shared.xcassets */; };
@@ -2857,6 +2859,8 @@
 		55A3CD4319A6DC8B00957845 /* PPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PPDocument.swift; sourceTree = "<group>"; };
 		55FA200F2DA000030000000F /* PPLastDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PPLastDirectory.swift; sourceTree = "<group>"; };
 		55FA20112DA0000300000011 /* PatternListWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternListWindowController.swift; sourceTree = "<group>"; };
+		AA4E5F1D1B7846319AEFE0FD /* SampleEditorWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleEditorWindowController.swift; sourceTree = "<group>"; };
+		4A50A5966C96457698FB2D82 /* SampleEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleEditorView.swift; sourceTree = "<group>"; };
 		55A6201C18A6EFEC003B29B5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/PreferenceNames.strings; sourceTree = "<group>"; };
 		55A9351817F28F9700493DC5 /* Shared.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Shared.xcassets; sourceTree = "<group>"; };
 		55ABE82B1A081546006B6AF9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -4638,6 +4642,8 @@
 				55A3CD4319A6DC8B00957845 /* PPDocument.swift */,
 				55FA200F2DA000030000000F /* PPLastDirectory.swift */,
 				55FA20112DA0000300000011 /* PatternListWindowController.swift */,
+				AA4E5F1D1B7846319AEFE0FD /* SampleEditorWindowController.swift */,
+				4A50A5966C96457698FB2D82 /* SampleEditorView.swift */,
 				557EF72F168BD4B5001BF077 /* PPInstrumentImporter.h */,
 				557EF730168BD4B5001BF077 /* PPInstrumentImporter.m */,
 				55E32C2519E9B56B0041B43B /* DocumentWindowController.swift */,
@@ -8350,6 +8356,8 @@
 				55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */,
 				55FA20102DA0000300000010 /* PPLastDirectory.swift in Sources */,
 				55FA20122DA0000300000012 /* PatternListWindowController.swift in Sources */,
+				1C019059242A42C598FB8364 /* SampleEditorWindowController.swift in Sources */,
+				563E91D45F8E45159469FAAD /* SampleEditorView.swift in Sources */,
 				555F5C611993327D0056AF01 /* OpenPanelViewController.swift in Sources */,
 				55852E1C18D67CCB0009BF55 /* PPSmallPianoView.m in Sources */,
 				55FEF84519844FD600D2E79C /* DigitalViewController.m in Sources */,

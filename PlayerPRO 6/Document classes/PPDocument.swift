@@ -26,6 +26,17 @@ import AudioToolbox
 	var pianoWindow: PianoWindowController?
 	// Same lazy-creation reasoning as pianoWindow.
 	var patternListWindow: PatternListWindowController?
+
+	// One editor window per (instrument, sample) slot, matching the legacy
+	// app's one-DialogPtr-per-slot behavior, so several can be open at once.
+	// Keyed by slot coordinates, not by PPSampleObject identity: every
+	// commit through the sample editor installs a fresh PPSampleObject copy
+	// (PPInstrumentObject.replaceInSamples(at:with:) always copies before
+	// storing, matching addSamplesObject:'s own convention), so identity
+	// churns on the very first edit -- an identity-keyed cache would leak an
+	// unreachable entry immediately.
+	private struct SampleEditorKey: Hashable { let instrumentIndex: Int; let sampleIndex: Int }
+	private var sampleEditorWindows: [SampleEditorKey: SampleEditorWindowController] = [:]
 	@objc dynamic let theDriver: PPDriver
 	// Nothing previously assigned this to the driver: PPDriver.currentMusic
 	// stayed nil forever, so -play had nothing to play regardless of whether
@@ -203,6 +214,24 @@ import AudioToolbox
 
 	@IBAction func showPatternList(_ sender: AnyObject!) {
 		showPatternList()
+	}
+
+	/// Shows the waveform editor for a specific (instrument, sample) slot,
+	/// creating it on first use. Reached by double-clicking a sample row in
+	/// the Instrument Panel, or the toolbar's "Waveform" button.
+	func showSampleEditor(for instrument: PPInstrumentObject, sampleIndex: Int) {
+		let key = SampleEditorKey(instrumentIndex: instrument.number, sampleIndex: sampleIndex)
+		let editor: SampleEditorWindowController
+		if let existing = sampleEditorWindows[key] {
+			editor = existing
+		} else {
+			editor = SampleEditorWindowController()
+			editor.configure(document: self, instrument: instrument, sampleIndex: sampleIndex)
+			sampleEditorWindows[key] = editor
+			addWindowController(editor)
+		}
+		editor.showWindow(self)
+		editor.window?.makeKeyAndOrderFront(self)
 	}
 
 	// Instruments > Instruments List (MainMenu.xib, keyEquivalent "l") --

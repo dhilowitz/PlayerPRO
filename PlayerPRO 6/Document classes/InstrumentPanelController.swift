@@ -10,16 +10,6 @@ import Cocoa
 import PlayerPROKit
 
 class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NSOutlineViewDelegate {
-	@IBOutlet weak var infoDrawer:			NSDrawer!
-	@IBOutlet weak var instrumentSize:		NSTextField!
-	@IBOutlet weak var instrumentLoopStart:	NSTextField!
-	@IBOutlet weak var instrumentLoopSize:	NSTextField!
-	@IBOutlet weak var instrumentVolume:	NSTextField!
-	@IBOutlet weak var instrumentRate:		NSTextField!
-	@IBOutlet weak var instrumentNote:		NSTextField!
-	@IBOutlet weak var instrumentBits:		NSTextField!
-	@IBOutlet weak var instrumentMode:		NSTextField!
-	@IBOutlet weak var waveFormImage:		NSImageView!
 	@IBOutlet weak var instrumentOutline:	NSOutlineView!
 	
 	@IBOutlet weak var currentDocument: PPDocument!
@@ -202,6 +192,9 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		sampleImporter = (AppDelegate.shared as! AppDelegate).samplesHandler
 		instrumentImporter = (AppDelegate.shared as! AppDelegate).instrumentPlugHandler
 		filterHandler = (AppDelegate.shared as! AppDelegate).filterHandler
+
+		instrumentOutline.target = self
+		instrumentOutline.doubleAction = #selector(openSampleEditor(_:))
 	}
 	
 	
@@ -300,19 +293,22 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		
 	}
 	
-	@IBAction func toggleInfo(_ sender: AnyObject!) {
-		// The "Waveform" toolbar item (InsPanel.xib) has never had an action
-		// wired to it, and this method has always been empty, so the drawer
-		// holding waveFormImage and the sample detail fields had no way to
-		// open at all.
-		guard let drawer = infoDrawer else { return }
-		// NSDrawer.state bridges to a raw Int, not an enum: NSDrawerState is
-		// closed=0, opening=1, open=2, closing=3.
-		if drawer.state == 1 || drawer.state == 2 {
-			drawer.close()
-		} else {
-			drawer.open()
-		}
+	// Double-clicking a sample row opens its editor directly; double-clicking
+	// an instrument row is a no-op here (the legacy app routes that to a
+	// separate, not-yet-built instrument-info editor -- out of scope).
+	@objc private func openSampleEditor(_ sender: Any?) {
+		guard let sample = instrumentOutline.item(atRow: instrumentOutline.clickedRow) as? PPSampleObject,
+			  let instrument = instrumentOutline.parent(forItem: sample) as? PPInstrumentObject else { return }
+		currentDocument.showSampleEditor(for: instrument, sampleIndex: sample.sampleIndex)
+	}
+
+	// Replaces the old NSDrawer-based static waveform preview (InsPanel.xib's
+	// "Waveform" toolbar button, previously wired to toggleInfo: which just
+	// opened/closed a drawer showing a read-only image) -- opens the real,
+	// interactive editor for the selected instrument's first sample instead.
+	@IBAction func openSampleEditorForSelection(_ sender: AnyObject!) {
+		guard let instrument = selectedInstrument, instrument.countOfSamples > 0 else { return }
+		currentDocument.showSampleEditor(for: instrument, sampleIndex: 0)
 	}
 	
 	@IBAction func deleteSample(_ sender: AnyObject!) {
@@ -334,53 +330,12 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 	}
 
 	@objc func outlineViewSelectionDidChange(_ notification: Notification) {
-		var object: AnyObject! = instrumentOutline.item(atRow: instrumentOutline.selectedRow) as AnyObject?
+		// Used to also populate the NSDrawer-based static waveform/detail
+		// preview here (instrumentSize/instrumentLoopStart/etc, waveFormImage)
+		// -- retired in favor of the real, interactive sample editor window
+		// (double-click a sample row, or the toolbar's "Waveform" button for
+		// the selected instrument's first sample).
 		currentDocument?.pianoWindow?.refreshSelectedInstrument()
-
-		func updateOutlineView(_ obj: PPSampleObject?) {
-			if obj == nil {
-				self.instrumentSize.stringValue = PPDoubleDash
-				self.instrumentLoopStart.stringValue = ""
-				self.instrumentLoopSize.stringValue = ""
-				self.instrumentVolume.stringValue = PPDoubleDash
-				self.instrumentRate.stringValue = PPDoubleDash
-				self.instrumentNote.stringValue = PPDoubleDash
-				self.instrumentBits.stringValue = PPDoubleDash
-				self.instrumentMode.stringValue = PPDoubleDash
-				self.waveFormImage.image = nil;
-			} else {
-				let untmpObj = obj!
-				self.instrumentSize.integerValue = untmpObj.data.count
-				if untmpObj.loopSize != 0 {
-					self.instrumentLoopStart.integerValue = Int(untmpObj.loopBegin)
-					self.instrumentLoopSize.integerValue = Int(untmpObj.loopSize)
-				} else {
-					self.instrumentLoopStart.stringValue = ""
-					self.instrumentLoopSize.stringValue = ""
-				}
-				self.instrumentVolume.integerValue = Int(untmpObj.volume)
-				self.instrumentRate.stringValue = untmpObj.c2spd != 0 ? "\(untmpObj.c2spd) Hz" : PPDoubleDash
-				self.instrumentNote.stringValue = octaveName(fromNote: UInt8(untmpObj.realNote), options: [.useSharpSymbol]) ?? "---"
-				self.instrumentBits.stringValue = untmpObj.amplitude != 0 ? "\(untmpObj.amplitude)-bit" : PPDoubleDash
-				self.instrumentMode.stringValue = untmpObj.loopType == .pingPong ? "Ping-pong" : "Classic"
-				let tmpIm = untmpObj.waveformImage(using: self.waveFormImage)
-				self.waveFormImage.image = tmpIm
-			}
-		}
-		
-		if let otherObj = object as? PPInstrumentObject {
-			if otherObj.countOfSamples > 0 {
-				let tmpObj = otherObj.samplesObject(at: 0)
-				updateOutlineView(tmpObj)
-			} else {
-				updateOutlineView(nil)
-				return
-			}
-		} else if let otherObj = object as? PPSampleObject {
-			updateOutlineView(otherObj)
-		} else {
-			updateOutlineView(nil)
-		}
 	}
 	
 	func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
