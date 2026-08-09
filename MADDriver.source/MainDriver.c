@@ -3404,6 +3404,7 @@ MADErr MADPlaySoundData(MADDriverRec *MDriver, const char *soundPtr, size_t size
 	curVoice->preOff		= 0xFFFFFFFF;
 	curVoice->preVal		= 0;
 	curVoice->spreVal		= 0;
+	curVoice->preVal2		= *curVoice->curPtr;
 	// amplitude is this function's actual bit-depth parameter (8 or 16 --
 	// see this function's own header doc comment in RDriver.h), not a
 	// volume -- Sample16BufferAddDelay dispatches on curVoice->amp against

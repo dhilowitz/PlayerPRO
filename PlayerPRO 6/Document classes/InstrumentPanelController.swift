@@ -206,9 +206,17 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		// entirely -- MADChannel.amp matched neither its 8 nor 16 branch,
 		// so nothing was ever mixed, regardless of everything else being
 		// set up correctly.
+		//
+		// samp.realNote is a signed semitone offset from the sample's
+		// natural pitch (frequently negative -- see e.g. FortePatch.swift's
+		// `60 - originRate`), not itself a note number; the engine's own
+		// normal note-trigger path (Interrupt.c:370/480/953) always plays
+		// it as `48 + realNote`. UInt8(samp.realNote) traps whenever
+		// realNote is negative, which crashed on most real-world samples.
+		let previewNote = UInt8(clamping: 48 + Int(samp.realNote))
 		try? theDriver.playSoundData(from: data as Data, fromChannel: channel,
 									  amplitude: Int16(samp.amplitude), bitRate: UInt32(samp.c2spd),
-									  isStereo: samp.isStereo, withNote: UInt8(samp.realNote))
+									  isStereo: samp.isStereo, withNote: previewNote)
 	}
 
 	// The actual audition primitive both playInstrument(_:) (the toolbar
@@ -230,14 +238,20 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		let channel = Int32(theDriver.availableChannel)
 		guard channel >= 0 else { return }
 
-		let playNote = note == 0xFF ? UInt8(samp.realNote) : note
-		// See playDecodedSample's identical fix above: PPDriver.playSoundData's
-		// "amplitude" parameter is the sample's bit depth (8/16), not a
-		// volume -- this primitive has no real per-call volume control at
-		// all (always plays at full volume internally), so the volume/
-		// playVolume naming here was already a no-op before this fix; what
-		// actually mattered, and was wrong, was passing a volume-shaped
-		// value into the engine's bit-depth parameter.
+		// See playDecodedSample's identical fix above: samp.realNote is a
+		// signed offset from the sample's natural pitch, played as
+		// `48 + realNote` by the engine's own normal note-trigger path
+		// (Interrupt.c:370/480/953) -- UInt8(samp.realNote) traps whenever
+		// realNote is negative (the common case), which crashed on most
+		// real-world samples.
+		let playNote = note == 0xFF ? UInt8(clamping: 48 + Int(samp.realNote)) : note
+		// PPDriver.playSoundData's "amplitude" parameter is the sample's
+		// bit depth (8/16), not a volume -- this primitive has no real
+		// per-call volume control at all (always plays at full volume
+		// internally), so the volume/playVolume naming here was already a
+		// no-op before this fix; what actually mattered, and was wrong,
+		// was passing a volume-shaped value into the engine's bit-depth
+		// parameter.
 		try? theDriver.playSoundData(from: data as Data, fromChannel: channel,
 									  amplitude: Int16(samp.amplitude), bitRate: UInt32(samp.c2spd),
 									  isStereo: samp.isStereo, withNote: playNote)
