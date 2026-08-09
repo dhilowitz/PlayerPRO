@@ -9,7 +9,7 @@
 import Cocoa
 import PlayerPROKit
 
-class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NSOutlineViewDelegate {
+class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NSOutlineViewDelegate, NSTextFieldDelegate {
 	@IBOutlet weak var instrumentOutline:	NSOutlineView!
 	
 	@IBOutlet weak var currentDocument: PPDocument!
@@ -397,6 +397,8 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		}
 		let theView = outlineView.makeView(withIdentifier: tableColumn!.identifier, owner: nil) as! PPInstrumentCellView
 		theView.controller = self
+		theView.textField?.isEditable = true
+		theView.textField?.delegate = self
 		if let obj = item as? PPInstrumentObject {
 			theView.isSample = false
 			theView.textField!.stringValue = obj.name
@@ -416,6 +418,28 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		return theView
 	}
 	
+	// The per-row name field (InsPanel.xib, PPInstrumentCellView's textField)
+	// was never made editable, and had no delegate -- the model side
+	// (-[PPInstrumentObject setName:]/-[PPSampleObject setName:]) already
+	// writes straight through to the underlying struct, so this was a pure
+	// UI gap, not a model bug. Handles both instrument and sample rows,
+	// since both share the same textField outlet/prototype cell.
+	override func controlTextDidEndEditing(_ obj: Notification) {
+		guard let textField = obj.object as? NSTextField else { return }
+		let row = instrumentOutline.row(for: textField)
+		guard row >= 0, let item = instrumentOutline.item(atRow: row) else { return }
+		if let instrument = item as? PPInstrumentObject {
+			guard instrument.name != textField.stringValue else { return }
+			instrument.name = textField.stringValue
+		} else if let sample = item as? PPSampleObject {
+			guard sample.name != textField.stringValue else { return }
+			sample.name = textField.stringValue
+		} else {
+			return
+		}
+		currentDocument.updateChangeCount(.changeDone)
+	}
+
 	@objc(replaceObjectInInstrumentsAtIndex:withObject:)
 	func replaceObjectInInstruments(at index: Int, withObject object: PPInstrumentObject!) {
 		currentDocument.theMusic.replaceInInstruments(at: index, with: object)
