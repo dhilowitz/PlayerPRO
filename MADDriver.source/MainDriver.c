@@ -3115,9 +3115,20 @@ MADErr MADStopMusic(MADDriverRec *MDriver)
 		return MADParametersErr;
 	if (!MDriver->base.curMusic)
 		return MADDriverHasNoMusic;
-	
+
 	MDriver->base.Reading = false;
-	
+
+	// Every other Reading=false site in this file is paired with
+	// MADCleanDriver, which (among other things) zeroes each channel's
+	// samplePtr -- this one wasn't. Currently harmless, since the CoreAudio
+	// callback silences its output unconditionally whenever Reading is
+	// false, but a pending fix there will instead keep mixing any channel
+	// with a live samplePtr so instrument/piano preview can be heard while
+	// stopped. Without this, a song paused mid-note (especially a looping
+	// sample) would keep rendering indefinitely instead of going silent.
+	for (int i = 0; i < MDriver->MultiChanNo; i++)
+		MADDriverClearChannel(MDriver, i);
+
 	if (MDriver->SendMIDIClockData)
 		SendMIDIClock(MDriver, 0xFC);
 	
