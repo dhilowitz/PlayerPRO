@@ -36,7 +36,12 @@ final public class Depth: NSObject, PPFilterPlugin {
 		controller.parentWindow = document
 
 		document.beginSheet(controller.window!, completionHandler: { (returnCode) -> Void in
-			
+			// Keeps controller alive for the sheet's lifetime -- a closure
+			// only retains what it actually references, and this handler
+			// used to be empty, so controller (target of the sheet's own
+			// OK/Cancel actions) was deallocated the instant this method
+			// returned, leaving the sheet permanently undismissable.
+			_ = controller
 		})
 	}
 }

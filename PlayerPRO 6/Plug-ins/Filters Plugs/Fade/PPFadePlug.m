@@ -42,7 +42,14 @@
 	controller.parentWindow = document;
 	
 	[document beginSheet:controller.window completionHandler:^(NSModalResponse returnCode) {
-		
+		// Keeps controller alive for the sheet's lifetime -- an ARC block
+		// only retains what it actually references, and this handler used
+		// to be empty, so controller (the target of the sheet's own OK/
+		// Cancel actions) was deallocated the instant this method
+		// returned. With a dead target, nothing could ever dismiss the
+		// sheet: not OK, not Cancel, not even Quit (app termination has to
+		// end every open sheet first).
+		(void)controller;
 	}];
 }
 

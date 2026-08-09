@@ -39,7 +39,11 @@
 	controller.parentWindow = document;
 	
 	[document beginSheet:controller.window completionHandler:^(NSModalResponse returnCode) {
-		
+		// See PPFadePlug.m's identical fix -- an empty block here captured
+		// nothing, so controller (target of the sheet's OK/Cancel) was
+		// deallocated the instant this method returned, leaving the sheet
+		// permanently undismissable.
+		(void)controller;
 	}];
 }
 

@@ -32,7 +32,11 @@ public final class LengthPlug: NSObject, PPFilterPlugin {
 		controller.parentWindow = document
 		
 		document.beginSheet(controller.window!, completionHandler: { (returnCode) -> Void in
-			
+			// See DepthPlug.swift's identical fix -- an empty closure here
+			// captured nothing, so controller (target of the sheet's OK/
+			// Cancel) was deallocated the instant this method returned,
+			// leaving the sheet permanently undismissable.
+			_ = controller
 		})
 	}
 }

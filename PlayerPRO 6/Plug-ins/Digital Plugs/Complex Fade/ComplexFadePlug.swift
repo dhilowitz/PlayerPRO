@@ -34,7 +34,11 @@ public final class ComplexFade: NSObject, PPDigitalPlugin {
 		controller.parentWindow = window
 
 		window.beginSheet(controller.window!, completionHandler: { (retVal) -> Void in
-			
+			// See DepthPlug.swift's identical fix -- an empty closure here
+			// captured nothing, so controller (target of the sheet's OK/
+			// Cancel) was deallocated the instant this method returned,
+			// leaving the sheet permanently undismissable.
+			_ = controller
 		})
 	}
 }
