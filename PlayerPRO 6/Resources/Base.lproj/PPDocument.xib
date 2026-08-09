@@ -212,24 +212,6 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="4D6B5386-6F5E-4A91-91FD-F2F49C14FDFA" displayMode="iconAndLabel" sizeMode="regular" id="JlD-qS-8hJ">
-                <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="NSToolbarShowColorsItem" id="wJ4-KS-vNe"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="sbL-mr-aVw"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="4c4-or-ZR4"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="HNV-ix-kLu"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="YH3-PY-P3B"/>
-                </allowedToolbarItems>
-                <defaultToolbarItems>
-                    <toolbarItem reference="wJ4-KS-vNe"/>
-                    <toolbarItem reference="sbL-mr-aVw"/>
-                    <toolbarItem reference="YH3-PY-P3B"/>
-                    <toolbarItem reference="4c4-or-ZR4"/>
-                </defaultToolbarItems>
-                <connections>
-                    <outlet property="delegate" destination="-2" id="AsE-1b-sG7"/>
-                </connections>
-            </toolbar>
             <connections>
                 <outlet property="delegate" destination="-2" id="17"/>
             </connections>
