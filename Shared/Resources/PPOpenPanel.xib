@@ -7,6 +7,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="OpenPanelViewController" customModule="PlayerPRO_6" customModuleProvider="target">
             <connections>
+                <outlet property="autoPlayCheckbox" destination="ppk-ap-chk" id="ppk-ap-out"/>
+                <outlet property="playButton" destination="ppk-pv-btn" id="ppk-pv-out"/>
                 <outlet property="popUp" destination="3" id="14"/>
                 <outlet property="view" destination="1" id="2"/>
             </connections>
@@ -14,11 +16,11 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView id="1">
-            <rect key="frame" x="0.0" y="0.0" width="359" height="61"/>
+            <rect key="frame" x="0.0" y="0.0" width="359" height="100"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="3">
-                    <rect key="frame" x="17" y="17" width="325" height="26"/>
+                    <rect key="frame" x="17" y="56" width="325" height="26"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" borderStyle="border" inset="2" id="4">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
@@ -28,12 +30,33 @@
                         <action selector="selectUTI:" target="-2" id="15"/>
                     </connections>
                 </popUpButton>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ppk-ap-chk">
+                    <rect key="frame" x="17" y="20" width="90" height="18"/>
+                    <buttonCell key="cell" type="check" title="Auto-Play" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="off" inset="2" id="ppk-ap-cel">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                </button>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ppk-pv-btn">
+                    <rect key="frame" x="270" y="16" width="72" height="26"/>
+                    <buttonCell key="cell" type="push" title="Play" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ppk-pv-cel">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="previewSelection:" target="-2" id="ppk-pv-act"/>
+                    </connections>
+                </button>
             </subviews>
             <constraints>
-                <constraint firstAttribute="bottom" secondItem="3" secondAttribute="bottom" constant="20" symbolic="YES" id="CdM-Kr-uFg"/>
                 <constraint firstItem="3" firstAttribute="centerX" secondItem="1" secondAttribute="centerX" id="DgZ-Hz-ZQY"/>
                 <constraint firstItem="3" firstAttribute="top" secondItem="1" secondAttribute="top" constant="20" symbolic="YES" id="Lvk-jg-ZcM"/>
                 <constraint firstAttribute="trailing" secondItem="3" secondAttribute="trailing" constant="20" symbolic="YES" id="ae0-7s-7hj"/>
+                <constraint firstAttribute="bottom" secondItem="ppk-ap-chk" secondAttribute="bottom" constant="20" symbolic="YES" id="ppk-ap-bot"/>
+                <constraint firstItem="ppk-ap-chk" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="20" symbolic="YES" id="ppk-ap-lead"/>
+                <constraint firstAttribute="bottom" secondItem="ppk-pv-btn" secondAttribute="bottom" constant="16" id="ppk-pv-bot"/>
+                <constraint firstAttribute="trailing" secondItem="ppk-pv-btn" secondAttribute="trailing" constant="17" id="ppk-pv-trail"/>
+                <constraint firstItem="ppk-pv-btn" firstAttribute="top" secondItem="3" secondAttribute="bottom" constant="12" symbolic="YES" id="ppk-pv-gap"/>
             </constraints>
         </customView>
     </objects>

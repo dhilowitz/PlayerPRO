@@ -142,6 +142,9 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		openPanel.directoryURL = PPLastDirectory.url(for: "instrumentFile")
 		if let vc = OpenPanelViewController(openPanel: openPanel, instrumentDictionary:fileDict) {
 			vc.setupDefaults()
+			vc.previewHandler = { [weak self] url in
+				self?.previewImportURL(url)
+			}
 			vc.beginOpenPanel(currentDocument.windowForSheet!, completionHandler: { (panelHandle: NSApplication.ModalResponse) -> Void in
 				if panelHandle.rawValue == NSFileHandlingPanelOKButton {
 					PPLastDirectory.remember(openPanel.url!, for: "instrumentFile")
@@ -166,6 +169,39 @@ class InstrumentPanelController: NSWindowController, NSOutlineViewDataSource, NS
 		}
 	}
 	
+	// Decodes whatever the open panel's Play button/Auto-Play checkbox
+	// (OpenPanelViewController.previewHandler) points at and plays it
+	// immediately, without ever calling targetInstrument.add(obj)/
+	// replaceObjectInInstruments(at:withObject:) -- beginImportingInstrument/
+	// beginImportingSample already fully decode before either commit step
+	// runs (see importInstrument(from:)/importSample(from:) above), so
+	// there's nothing else needed to make the result playable on its own.
+	// Mirrors importInstrument(_:)'s own instrument-then-sample fallback
+	// shape, since this panel can't know which kind of file is selected
+	// ahead of time either.
+	private func previewImportURL(_ url: URL) {
+		if let plugType = try? instrumentImporter.identifyInstrumentFile(url) {
+			instrumentImporter.beginImportingInstrument(ofType: plugType, from: url, driver: currentDocument.theDriver, parentDocument: currentDocument) { [weak self] err, obj in
+				guard err == nil, let obj = obj, obj.countOfSamples > 0 else { return }
+				self?.playDecodedSample(obj.samplesObject(at: 0))
+			}
+		} else if let plugType = try? sampleImporter.identifySampleFile(url) {
+			sampleImporter.beginImportingSample(type: plugType, URL: url, driver: theDriver, parentDocument: currentDocument) { [weak self] err, obj in
+				guard err == nil, let obj = obj else { return }
+				self?.playDecodedSample(obj)
+			}
+		}
+	}
+
+	private func playDecodedSample(_ samp: PPSampleObject) {
+		guard let data = samp.data else { return }
+		let channel = Int32(theDriver.availableChannel)
+		guard channel >= 0 else { return }
+		try? theDriver.playSoundData(from: data as Data, fromChannel: channel,
+									  amplitude: Int16(samp.volume), bitRate: UInt32(samp.c2spd),
+									  isStereo: samp.isStereo, withNote: UInt8(samp.realNote))
+	}
+
 	// The actual audition primitive both playInstrument(_:) (the toolbar
 	// button) and playSample(_:) (each row's inline play button) feed into
 	// -- this was completely empty, so neither one has ever played audio

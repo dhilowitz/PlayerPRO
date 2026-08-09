@@ -144,6 +144,29 @@ class OpenPanelViewController: NSViewController, NSOpenSavePanelDelegate {
 	private let openPanel: NSOpenPanel
 	private let utiObjects: [OpenPanelViewItem]
 	@IBOutlet weak var popUp: NSPopUpButton? = nil
+	@IBOutlet weak var playButton: NSButton? = nil
+	@IBOutlet weak var autoPlayCheckbox: NSButton? = nil
+
+	/// Set by the caller (this view has no driver access of its own, and is
+	/// shared with the plain tracker-open panel that has no notion of
+	/// "preview" at all -- see selectUTI:/setupDefaults's caller-agnostic
+	/// shape) to decode-and-play whatever file is currently selected,
+	/// without committing it anywhere. Invoked by the Play button and, when
+	/// autoPlayCheckbox is on, by every panelSelectionDidChange(_:).
+	var previewHandler: ((URL) -> Void)?
+
+	@IBAction func previewSelection(_ sender: Any?) {
+		guard let url = openPanel.url else {
+			NSSound.beep()
+			return
+		}
+		previewHandler?(url)
+	}
+
+	func panelSelectionDidChange(_ sender: Any?) {
+		guard autoPlayCheckbox?.state == .on, let url = openPanel.url else { return }
+		previewHandler?(url)
+	}
 	
 	var allowsMultipleSelectionOfTrackers: Bool = false {
 		didSet {
