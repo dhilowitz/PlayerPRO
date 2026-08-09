@@ -75,6 +75,9 @@ final class SampleEditorWindowController: NSWindowController {
 		self.theDriver = document.theDriver
 
 		editorView.editUndoManager = document.undoManager
+		editorView.commitDataEdit = { [weak self] name, mutate in
+			self?.commitEdit(name, mutate)
+		}
 
 		let samp = sample
 		window?.title = String(format: NSLocalizedString("%d - %@", comment: "sample editor window title: index - name"),
