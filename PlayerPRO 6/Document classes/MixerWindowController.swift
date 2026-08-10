@@ -25,10 +25,13 @@ import PlayerPROKit
 
 class MixerWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate, NSWindowDelegate {
 
-	weak var currentDocument: PPDocument?
+	weak var currentDocument: PPDocument? {
+		didSet { reload() }
+	}
 
 	private var tableView: NSTableView!
 	private var tempoLabel: NSTextField!
+	private var liveUpdateTimer: Timer?
 
 	private static let trackColumnID = NSUserInterfaceItemIdentifier("track")
 	private static let volumeColumnID = NSUserInterfaceItemIdentifier("volume")
@@ -123,16 +126,56 @@ class MixerWindowController: NSWindowController, NSTableViewDataSource, NSTableV
 		content.addSubview(strip)
 	}
 
-	// MARK: Reload
-	//
-	// Rebuilds the row count (a song's track count is fixed once loaded, but
-	// this is cheap and matches PatternListWindowController's reload()
-	// precedent) and refreshes the static parts of the header/rows. Live,
-	// per-tick refresh (activity meters, tempo while playing) is separate --
-	// see the timer-driven update added alongside the control wiring.
+	// MARK: Reload / live updates
 
 	func reload() {
-		tableView.reloadData()
+		tableView?.reloadData()
+		updateLiveDisplay()
+	}
+
+	// Started when the window is shown, stopped when it closes -- no point
+	// polling activity meters nobody can see. Matches
+	// DocumentWindowController's startPlaybackTimer/updateTransportDisplay
+	// idiom (same 0.1s interval), just keyed to window visibility instead
+	// of playback state.
+	override func showWindow(_ sender: Any?) {
+		super.showWindow(sender)
+		startLiveUpdates()
+	}
+
+	private func startLiveUpdates() {
+		liveUpdateTimer?.invalidate()
+		liveUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+			self?.updateLiveDisplay()
+		}
+	}
+
+	private func stopLiveUpdates() {
+		liveUpdateTimer?.invalidate()
+		liveUpdateTimer = nil
+	}
+
+	// Tempo readout (mirrors DocumentWindowController's updateSpeedTempoDisplay:
+	// live value while playing, saved default while stopped) and every
+	// visible row's Activity meter. Volume/Pan/Mute don't need a poll -- they
+	// only change from user input on this same window or from a fresh
+	// reload(), both of which already push the current value into the
+	// control directly.
+	private func updateLiveDisplay() {
+		guard let driver = currentDocument?.theDriver, let music = currentDocument?.theMusic, let tableView else {
+			tempoLabel?.stringValue = ""
+			return
+		}
+
+		let bpm = Int(driver.isPlayingMusic ? driver.tempoBPM : music.defaultTempo)
+		tempoLabel.stringValue = String(format: NSLocalizedString("Tempo: %d BPM", comment: "mixer tempo readout"), bpm)
+
+		let activityColumn = tableView.column(withIdentifier: MixerWindowController.activityColumnID)
+		guard activityColumn >= 0 else { return }
+		for row in 0..<music.totalTracks {
+			guard let meter = tableView.view(atColumn: activityColumn, row: row, makeIfNecessary: false) as? NSLevelIndicator else { continue }
+			meter.integerValue = Int(driver.activity(atTrack: row))
+		}
 	}
 
 	// MARK: NSTableViewDataSource
@@ -152,11 +195,16 @@ class MixerWindowController: NSWindowController, NSTableViewDataSource, NSTableV
 			return cell
 		}
 
+		let driver = currentDocument?.theDriver
+
 		if identifier == MixerWindowController.volumeColumnID {
 			let slider = NSSlider(frame: .zero)
 			slider.minValue = 0
 			slider.maxValue = 64
 			slider.tag = row
+			slider.target = self
+			slider.action = #selector(volumeSliderChanged(_:))
+			if let driver { slider.integerValue = Int(driver.volume(atTrack: row)) }
 			return slider
 		}
 
@@ -165,12 +213,20 @@ class MixerWindowController: NSWindowController, NSTableViewDataSource, NSTableV
 			slider.minValue = 0
 			slider.maxValue = 64
 			slider.tag = row
+			slider.target = self
+			slider.action = #selector(panSliderChanged(_:))
+			// Affects the next note triggered on this track, not any note
+			// already sounding -- header->chanPan is only read at note-trigger
+			// time (Interrupt.c), unlike chanVol which is read every mix tick.
+			// Real, existing engine behavior, not a limitation of this UI.
+			if let driver { slider.integerValue = Int(driver.pan(atTrack: row)) }
 			return slider
 		}
 
 		if identifier == MixerWindowController.muteColumnID {
-			let checkbox = NSButton(checkboxWithTitle: "", target: nil, action: nil)
+			let checkbox = NSButton(checkboxWithTitle: "", target: self, action: #selector(muteCheckboxChanged(_:)))
 			checkbox.tag = row
+			if let driver { checkbox.state = driver.isChannelActive(at: row) ? .off : .on }
 			return checkbox
 		}
 
@@ -181,14 +237,31 @@ class MixerWindowController: NSWindowController, NSTableViewDataSource, NSTableV
 			meter.maxValue = 64
 			meter.isEditable = false
 			meter.tag = row
+			if let driver { meter.integerValue = Int(driver.activity(atTrack: row)) }
 			return meter
 		}
 
 		return nil
 	}
 
+	// MARK: Control actions
+
+	@objc private func volumeSliderChanged(_ sender: NSSlider) {
+		currentDocument?.theDriver.setVolume(Int16(sender.integerValue), atTrack: sender.tag)
+	}
+
+	@objc private func panSliderChanged(_ sender: NSSlider) {
+		currentDocument?.theDriver.setPan(Int16(sender.integerValue), atTrack: sender.tag)
+	}
+
+	@objc private func muteCheckboxChanged(_ sender: NSButton) {
+		// Checked == muted, so "active" is the inverse of the checkbox state.
+		currentDocument?.theDriver.setChannel(at: sender.tag, toActive: sender.state == .off)
+	}
+
 	// MARK: NSWindowDelegate
 
 	func windowWillClose(_ notification: Notification) {
+		stopLiveUpdates()
 	}
 }
