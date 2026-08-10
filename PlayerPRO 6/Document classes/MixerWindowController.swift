@@ -8,7 +8,7 @@
 //  Files/wds_views/TrackView.c, but nothing richer than that was found in
 //  any available source, legacy or SourceForge release archive -- see
 //  kind-petting-balloon.md). Built entirely in code, no nib, following the
-//  same shape as PatternListWindowController/PianoWindowController: cached
+//  same shape as PartitionListWindowController/PianoWindowController: cached
 //  per document, registered via addWindowController so document-hosted
 //  menu actions keep validating while this window is key.
 //

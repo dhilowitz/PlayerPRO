@@ -543,7 +543,7 @@
 		559EA1591C288A0700969B41 /* MADErrs_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 559EA1571C288A0700969B41 /* MADErrs_Tests.swift */; };
 		55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A3CD4319A6DC8B00957845 /* PPDocument.swift */; };
 		55FA20102DA0000300000010 /* PPLastDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA200F2DA000030000000F /* PPLastDirectory.swift */; };
-		55FA20122DA0000300000012 /* PatternListWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20112DA0000300000011 /* PatternListWindowController.swift */; };
+		55FA20122DA0000300000012 /* PartitionListWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FA20112DA0000300000011 /* PartitionListWindowController.swift */; };
 		3BB24CFB9929297FE747732D /* MixerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E18D0661CEA64BD762BE805 /* MixerWindowController.swift */; };
 		1C019059242A42C598FB8364 /* SampleEditorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4E5F1D1B7846319AEFE0FD /* SampleEditorWindowController.swift */; };
 		563E91D45F8E45159469FAAD /* SampleEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A50A5966C96457698FB2D82 /* SampleEditorView.swift */; };
@@ -2859,7 +2859,7 @@
 		559EA1571C288A0700969B41 /* MADErrs_Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MADErrs_Tests.swift; sourceTree = "<group>"; };
 		55A3CD4319A6DC8B00957845 /* PPDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PPDocument.swift; sourceTree = "<group>"; };
 		55FA200F2DA000030000000F /* PPLastDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PPLastDirectory.swift; sourceTree = "<group>"; };
-		55FA20112DA0000300000011 /* PatternListWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternListWindowController.swift; sourceTree = "<group>"; };
+		55FA20112DA0000300000011 /* PartitionListWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartitionListWindowController.swift; sourceTree = "<group>"; };
 		0E18D0661CEA64BD762BE805 /* MixerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixerWindowController.swift; sourceTree = "<group>"; };
 		AA4E5F1D1B7846319AEFE0FD /* SampleEditorWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleEditorWindowController.swift; sourceTree = "<group>"; };
 		4A50A5966C96457698FB2D82 /* SampleEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleEditorView.swift; sourceTree = "<group>"; };
@@ -4643,7 +4643,7 @@
 			children = (
 				55A3CD4319A6DC8B00957845 /* PPDocument.swift */,
 				55FA200F2DA000030000000F /* PPLastDirectory.swift */,
-				55FA20112DA0000300000011 /* PatternListWindowController.swift */,
+				55FA20112DA0000300000011 /* PartitionListWindowController.swift */,
 				0E18D0661CEA64BD762BE805 /* MixerWindowController.swift */,
 				AA4E5F1D1B7846319AEFE0FD /* SampleEditorWindowController.swift */,
 				4A50A5966C96457698FB2D82 /* SampleEditorView.swift */,
@@ -8358,7 +8358,7 @@
 				55FA200E2DA000030000000E /* BoxGridView.swift in Sources */,
 				55A3CD4419A6DC8B00957845 /* PPDocument.swift in Sources */,
 				55FA20102DA0000300000010 /* PPLastDirectory.swift in Sources */,
-				55FA20122DA0000300000012 /* PatternListWindowController.swift in Sources */,
+				55FA20122DA0000300000012 /* PartitionListWindowController.swift in Sources */,
 				3BB24CFB9929297FE747732D /* MixerWindowController.swift in Sources */,
 				1C019059242A42C598FB8364 /* SampleEditorWindowController.swift in Sources */,
 				563E91D45F8E45159469FAAD /* SampleEditorView.swift in Sources */,

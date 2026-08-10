@@ -25,7 +25,7 @@ import AudioToolbox
 	// alongside the document.
 	var pianoWindow: PianoWindowController?
 	// Same lazy-creation reasoning as pianoWindow.
-	var patternListWindow: PatternListWindowController?
+	var partitionListWindow: PartitionListWindowController?
 	// Same lazy-creation reasoning as pianoWindow.
 	var mixerWindow: MixerWindowController?
 
@@ -197,16 +197,16 @@ import AudioToolbox
 		showPiano()
 	}
 
-	/// Shows this document's pattern (order) list window, creating it on
-	/// first use.
-	func showPatternList() {
-		let list: PatternListWindowController
-		if let existing = patternListWindow {
+	/// Shows this document's order list window (the original's "Partition
+	/// List"), creating it on first use.
+	func showPartitionList() {
+		let list: PartitionListWindowController
+		if let existing = partitionListWindow {
 			list = existing
 		} else {
-			list = PatternListWindowController()
+			list = PartitionListWindowController()
 			list.currentDocument = self
-			patternListWindow = list
+			partitionListWindow = list
 			addWindowController(list)
 		}
 		list.reload()
@@ -214,8 +214,8 @@ import AudioToolbox
 		list.window?.makeKeyAndOrderFront(self)
 	}
 
-	@IBAction func showPatternList(_ sender: AnyObject!) {
-		showPatternList()
+	@IBAction func showPartitionList(_ sender: AnyObject!) {
+		showPartitionList()
 	}
 
 	/// Shows this document's Mixer window, creating it on first use.
@@ -268,7 +268,7 @@ import AudioToolbox
 	/// pattern via PPMusicObject.addPattern and switches every open editor
 	/// to show it. Deliberately does not place it into the order list --
 	/// see -addPattern's own comment for why -- so it's reachable but not
-	/// yet part of what plays until the user places it via the Pattern List.
+	/// yet part of what plays until the user places it via the Partition List.
 	func createNewPattern() {
 		guard let newPattern = theMusic?.addPattern() else {
 			NSSound.beep()   // hit the 200-pattern cap
@@ -276,7 +276,7 @@ import AudioToolbox
 		}
 		updateChangeCount(.changeDone)
 		currentPatternID = newPattern.index
-		patternListWindow?.reload()
+		partitionListWindow?.reload()
 	}
 
 	@IBAction func createNewPattern(_ sender: AnyObject!) {

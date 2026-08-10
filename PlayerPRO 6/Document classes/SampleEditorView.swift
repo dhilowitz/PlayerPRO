@@ -335,7 +335,7 @@ final class SampleEditorView: NSView {
 		// type up front rather than let a later composition (e.g. an
 		// interpolation or ternary) silently re-widen it back to Optional,
 		// the same trap already found and fixed once in
-		// PatternListWindowController for patternName.
+		// PartitionListWindowController for patternName.
 		let oldData: Data = samp.data ?? Data()
 		commitMutation?(name) { $0.data = newData }
 		effectiveUndoManager?.registerUndo(withTarget: self) { target in

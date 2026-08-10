@@ -1,5 +1,5 @@
 //
-//  PatternListWindowController.swift
+//  PartitionListWindowController.swift
 //  PlayerPRO 6
 //
 //  The order list (the original's "Partition List" -- Files/Partition.c):
@@ -21,7 +21,7 @@
 import Cocoa
 import PlayerPROKit
 
-class PatternListWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate {
+class PartitionListWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate {
 
 	/// Practical order-list length limit -- matches the original's own
 	/// self-imposed UI cap (LISTSIZE = 256 in Partition.c, and repeated
@@ -45,7 +45,7 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 	// title sync, which would otherwise overwrite the title set below with
 	// just the document's own display name.
 	override func windowTitle(forDocumentDisplayName displayName: String) -> String {
-		return String(format: NSLocalizedString("Pattern List (%@)", comment: "pattern list window title, %@ is the document name"), displayName)
+		return String(format: NSLocalizedString("Partition List (%@)", comment: "partition list window title, %@ is the document name"), displayName)
 	}
 
 	convenience init() {
@@ -53,7 +53,7 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 		let window = NSWindow(contentRect: contentRect,
 							   styleMask: [.titled, .closable, .miniaturizable, .resizable],
 							   backing: .buffered, defer: false)
-		window.title = NSLocalizedString("Pattern List", comment: "pattern list window title")
+		window.title = NSLocalizedString("Partition List", comment: "partition list window title")
 		window.isReleasedWhenClosed = false
 
 		self.init(window: window)
@@ -75,14 +75,14 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 		table.delegate = self
 		table.headerView = NSTableHeaderView()
 
-		let posColumn = NSTableColumn(identifier: PatternListWindowController.positionColumnID)
-		posColumn.title = NSLocalizedString("Pos", comment: "pattern list position column")
+		let posColumn = NSTableColumn(identifier: PartitionListWindowController.positionColumnID)
+		posColumn.title = NSLocalizedString("Pos", comment: "partition list position column")
 		posColumn.width = 44
 		posColumn.minWidth = 36
 		table.addTableColumn(posColumn)
 
-		let patternColumn = NSTableColumn(identifier: PatternListWindowController.patternColumnID)
-		patternColumn.title = NSLocalizedString("Pattern", comment: "pattern list pattern column")
+		let patternColumn = NSTableColumn(identifier: PartitionListWindowController.patternColumnID)
+		patternColumn.title = NSLocalizedString("Pattern", comment: "partition list pattern column")
 		patternColumn.width = 250
 		patternColumn.minWidth = 100
 		table.addTableColumn(patternColumn)
@@ -153,7 +153,7 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 	func selectRow(forCurrentPosition: Bool) {
 		guard forCurrentPosition, let driver = currentDocument?.theDriver else { return }
 		let row = Int(driver.partitionPosition)
-		guard row >= 0, row < PatternListWindowController.listSize else { return }
+		guard row >= 0, row < PartitionListWindowController.listSize else { return }
 		if tableView.selectedRow != row {
 			tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
 			tableView.scrollRowToVisible(row)
@@ -163,7 +163,7 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 	// MARK: NSTableViewDataSource
 
 	func numberOfRows(in tableView: NSTableView) -> Int {
-		return PatternListWindowController.listSize
+		return PartitionListWindowController.listSize
 	}
 
 	// MARK: NSTableViewDelegate
@@ -178,13 +178,13 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 		// clearer "inactive" signal in a modern list.
 		let active = row < music.orderListLength
 
-		if identifier == PatternListWindowController.positionColumnID {
+		if identifier == PartitionListWindowController.positionColumnID {
 			let cell = NSTextField(labelWithString: "\(row + 1)")
 			cell.textColor = active ? .labelColor : .tertiaryLabelColor
 			return cell
 		}
 
-		if identifier == PatternListWindowController.patternColumnID {
+		if identifier == PartitionListWindowController.patternColumnID {
 			let popup = NSPopUpButton(frame: .zero, pullsDown: false)
 			popup.tag = row
 			for pattern in music.patterns {
@@ -267,15 +267,15 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 	@objc private func addPosition() {
 		guard let music = currentDocument?.theMusic else { return }
 		let insertAt = max(0, tableView.selectedRow) + 1
-		guard insertAt < PatternListWindowController.listSize else { return }
+		guard insertAt < PartitionListWindowController.listSize else { return }
 
-		var i = PatternListWindowController.listSize - 1
+		var i = PartitionListWindowController.listSize - 1
 		while i >= insertAt {
 			music.setPatternID(music.patternID(atOrderListPosition: i - 1), atOrderListPosition: i)
 			i -= 1
 		}
 
-		music.orderListLength = min(PatternListWindowController.listSize, music.orderListLength + 1)
+		music.orderListLength = min(PartitionListWindowController.listSize, music.orderListLength + 1)
 		currentDocument?.updateChangeCount(.changeDone)
 		reload()
 		tableView.selectRowIndexes(IndexSet(integer: insertAt), byExtendingSelection: false)
@@ -289,11 +289,11 @@ class PatternListWindowController: NSWindowController, NSTableViewDataSource, NS
 		guard removeAt >= 0 else { return }
 
 		var i = removeAt
-		while i < PatternListWindowController.listSize - 1 {
+		while i < PartitionListWindowController.listSize - 1 {
 			music.setPatternID(music.patternID(atOrderListPosition: i + 1), atOrderListPosition: i)
 			i += 1
 		}
-		music.setPatternID(0, atOrderListPosition: PatternListWindowController.listSize - 1)
+		music.setPatternID(0, atOrderListPosition: PartitionListWindowController.listSize - 1)
 
 		music.orderListLength = max(1, music.orderListLength - 1)
 		currentDocument?.updateChangeCount(.changeDone)

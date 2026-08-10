@@ -87,11 +87,11 @@ class DocumentWindowController: NSWindowController {
 		editorsTab.selectTabViewItem(withIdentifier: "Wave")
 	}
 
-	// showPiano(_:)/showInstrumentsList(_:)/showPatternList(_:) used to live
-	// here, but a menu item wired to target -1 (First Responder) only
+	// showPiano(_:)/showInstrumentsList(_:)/showPartitionList(_:) used to
+	// live here, but a menu item wired to target -1 (First Responder) only
 	// validates against the KEY window's responder chain -- and that chain
 	// only reaches this class from the main document window itself, not
-	// from the document's other windows (Instrument Panel, Piano, Pattern
+	// from the document's other windows (Instrument Panel, Piano, Partition
 	// List). Whichever of those happened to be focused, all three menu
 	// items showed up grayed out. Moved to PPDocument, which (via
 	// addWindowController) sits in the responder chain of every window that
@@ -282,10 +282,10 @@ class DocumentWindowController: NSWindowController {
 			boxController?.gridView?.playbackRow = -1
 		}
 
-		// If the Pattern List window is open, keep its selection following
+		// If the Partition List window is open, keep its selection following
 		// the transport too -- matches the original's SelectCurrentParti,
 		// which polled MADDriver->PL every idle tick.
-		currentDocument?.patternListWindow?.selectRow(forCurrentPosition: true)
+		currentDocument?.partitionListWindow?.selectRow(forCurrentPosition: true)
 
 		if !driver.isPlayingMusic {
 			stopPlaybackTimer()

@@ -5,7 +5,7 @@
 //  A per-sample waveform editor window, opened by double-clicking a sample
 //  row in the Instrument Panel -- the modern equivalent of the legacy app's
 //  Samples.c dialog (one window per instrument slot). Built entirely in
-//  code, following the same shape as PatternListWindowController/
+//  code, following the same shape as PartitionListWindowController/
 //  PianoWindowController: no nib, cached per document, registered via
 //  addWindowController so document-hosted menu actions keep validating
 //  while this window is key.
