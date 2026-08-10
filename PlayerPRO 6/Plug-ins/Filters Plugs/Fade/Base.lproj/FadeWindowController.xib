@@ -7,6 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="FadeWindowController">
             <connections>
+                <outlet property="fadeForm" destination="13" id="fkQ-fade-frm"/>
                 <outlet property="window" destination="1" id="3"/>
             </connections>
         </customObject>

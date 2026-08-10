@@ -36,8 +36,14 @@
 	controller.theData = theData;
 	controller.selectionRange = selRange;
 	controller.currentBlock = handle;
-	controller.fadeTo = 1.0;
-	controller.fadeFrom = .70;
+	// fadeFrom/fadeTo are whole-number PERCENTAGES (FadeWindowController's
+	// -okay: computes `temp *= per; temp /= 100L;`), not 0-1 fractions --
+	// these were set to 0.70/1.0, scaling every faded sample down to
+	// ~0.7-1% of its original amplitude regardless of what's typed into
+	// the dialog's fields (their initial values, before any edit).
+	// Effectively silence.
+	controller.fadeTo = 100.0;
+	controller.fadeFrom = 70.0;
 	controller.stereoMode = StereoMode;
 	controller.parentWindow = document;
 	

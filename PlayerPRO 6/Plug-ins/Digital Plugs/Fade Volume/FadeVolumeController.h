@@ -16,4 +16,5 @@
 @property (copy) PPPlugErrorBlock currentBlock;
 
 @property (strong) NSWindow *parentWindow;
+@property (weak) IBOutlet NSForm *fadeForm;
 @end

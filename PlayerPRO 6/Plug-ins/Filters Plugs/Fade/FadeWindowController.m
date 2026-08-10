@@ -114,12 +114,17 @@
 	return YES;
 }
 
-#if 0
+// NSForm computes its title-label column width/cell layout separately from
+// the outer Auto Layout constraints that just position/size the form as a
+// block -- without an explicit call to recompute it, the form draws with
+// whatever (wrong) internal layout it happened to have right after nib
+// load, only correcting itself once something else forces a redraw (e.g.
+// the user tabbing between fields). -sizeToFit is what actually recomputes
+// it.
 - (void)windowDidLoad
 {
 	[super windowDidLoad];
-	// Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+	[self.fadeForm sizeToFit];
 }
-#endif
 
 @end

@@ -36,11 +36,11 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="133" y="235" width="609" height="488"/>
+            <rect key="contentRect" x="133" y="235" width="860" height="488"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1057"/>
             <value key="minSize" type="size" width="94" height="86"/>
             <view key="contentView" id="6">
-                <rect key="frame" x="0.0" y="0.0" width="609" height="488"/>
+                <rect key="frame" x="0.0" y="0.0" width="860" height="488"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <box autoresizesSubviews="NO" title="Box" borderType="line" titlePosition="noTitle" id="tja-dm-7N1">
@@ -192,31 +192,31 @@
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </box>
                     <tabView initialItem="gav-7k-IAf" id="eP8-FW-QMd">
-                        <rect key="frame" x="13" y="10" width="583" height="354"/>
+                        <rect key="frame" x="13" y="10" width="834" height="354"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="Digital" identifier="Digital" id="gav-7k-IAf">
                                 <view key="view" id="3cF-zg-o6h">
-                                    <rect key="frame" x="10" y="33" width="563" height="308"/>
+                                    <rect key="frame" x="10" y="33" width="814" height="308"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>
                             </tabViewItem>
                             <tabViewItem label="Box" identifier="Box" id="A24-KY-JgR">
                                 <view key="view" id="BQP-AN-bfF">
-                                    <rect key="frame" x="10" y="33" width="563" height="308"/>
+                                    <rect key="frame" x="10" y="33" width="814" height="308"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>
                             </tabViewItem>
                             <tabViewItem label="Classic" identifier="Classic" id="ykk-c8-31L">
                                 <view key="view" id="9ML-I9-VAO">
-                                    <rect key="frame" x="10" y="33" width="563" height="308"/>
+                                    <rect key="frame" x="10" y="33" width="814" height="308"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>
                             </tabViewItem>
                             <tabViewItem label="Wave" identifier="Wave" id="zqf-cY-1dY">
                                 <view key="view" id="UQt-sf-rgN">
-                                    <rect key="frame" x="10" y="33" width="563" height="308"/>
+                                    <rect key="frame" x="10" y="33" width="814" height="308"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>
                             </tabViewItem>

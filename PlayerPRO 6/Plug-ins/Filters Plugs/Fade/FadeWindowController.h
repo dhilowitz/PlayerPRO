@@ -19,6 +19,8 @@
 
 @property (strong) NSWindow *parentWindow;
 
+@property (weak) IBOutlet NSForm *fadeForm;
+
 - (IBAction)okay:(id)sender;
 - (IBAction)cancel:(id)sender;
 @end

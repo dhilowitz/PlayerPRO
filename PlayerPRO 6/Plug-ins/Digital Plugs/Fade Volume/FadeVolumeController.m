@@ -65,12 +65,14 @@
 	return YES;
 }
 
-#if 0
+// See FadeWindowController.m's identical override -- NSForm needs an
+// explicit -sizeToFit to compute its title-label column layout; without
+// it, the form draws with a stale/wrong internal layout until something
+// else forces a redraw (e.g. tabbing between fields).
 - (void)windowDidLoad
 {
 	[super windowDidLoad];
-	// Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+	[self.fadeForm sizeToFit];
 }
-#endif
 
 @end
