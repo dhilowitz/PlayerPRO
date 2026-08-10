@@ -162,11 +162,30 @@ class BoxViewController: NSViewController {
 	// document, even though this property is declared PPDocument!. Reading
 	// through AnyObject first avoids ever sending a PPDocument-only message
 	// to what might actually be a DocumentWindowController instance.
+	// Confirmed live (Release configuration, whole-module optimization):
+	// Swift's own `as?`/`as!` dynamic cast unreliably returns nil for this
+	// exact object even though -isKindOfClass: (Objective-C's own,
+	// independent runtime check) correctly identifies it -- a genuine
+	// Swift dynamic-casting bug specific to this build configuration, not
+	// a logic error in the check itself. isKind(of:) + unsafeDowncast(_:to:)
+	// route entirely around Swift's cast machinery: isKind(of:) is
+	// implemented directly by NSObject's own runtime (reliable in every
+	// build tested), and unsafeDowncast performs no verification of its
+	// own -- it just reinterprets a reference whose type isKind(of:) has
+	// already independently confirmed, which is exactly what's needed once
+	// that's been done.
 	private func resolvedDocument() -> PPDocument? {
 		guard let candidate = currentDocument else { return nil }
 		let object = candidate as AnyObject
-		if let doc = object as? PPDocument { return doc }
-		if let winCon = object as? DocumentWindowController { return winCon.currentDocument }
+
+		if object.isKind(of: PPDocument.self) {
+			return unsafeDowncast(object, to: PPDocument.self)
+		}
+		if object.isKind(of: DocumentWindowController.self) {
+			let winCon = unsafeDowncast(object, to: DocumentWindowController.self)
+			guard let inner = winCon.currentDocument as AnyObject?, inner.isKind(of: PPDocument.self) else { return nil }
+			return unsafeDowncast(inner, to: PPDocument.self)
+		}
 		return nil
 	}
 
