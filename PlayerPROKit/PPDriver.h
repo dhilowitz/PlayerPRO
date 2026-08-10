@@ -158,6 +158,24 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isChannelActiveAtIndex:(NSInteger)idx;
 - (void)setChannelAtIndex:(NSInteger)idx toActive:(BOOL)enabled NS_SWIFT_NAME(setChannel(at:toActive:));
 
+//! 0 to 64. Backed by the current music's header->chanVol[idx] -- read live
+//! every mix tick (DoVolPanning256, Interrupt.c), so a change here is heard
+//! immediately, including on already-sounding notes.
+- (short)volumeAtTrackIndex:(NSInteger)idx NS_SWIFT_NAME(volume(atTrack:));
+- (void)setVolume:(short)volume atTrackIndex:(NSInteger)idx NS_SWIFT_NAME(setVolume(_:atTrack:));
+
+//! 0 to 64. Backed by the current music's header->chanPan[idx] -- unlike
+//! volume, this is only read when a note is TRIGGERED on that track
+//! (Interrupt.c), not continuously, so a change here affects the next note
+//! played on that track rather than any note already sounding.
+- (short)panAtTrackIndex:(NSInteger)idx NS_SWIFT_NAME(pan(atTrack:));
+- (void)setPan:(short)pan atTrackIndex:(NSInteger)idx NS_SWIFT_NAME(setPan(_:atTrack:));
+
+//! 0 to 64, decaying towards 0 when a track is silent. A lightweight,
+//! already-computed-per-mix-tick gain snapshot (not true post-mix RMS) --
+//! suitable for a VU-style activity meter, not a precise level meter.
+- (short)activityAtTrackIndex:(NSInteger)idx NS_SWIFT_NAME(activity(atTrack:));
+
 @end
 
 @interface PPDriver (deprecated)

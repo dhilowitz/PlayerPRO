@@ -816,9 +816,11 @@ MADErr MADCreateDriver(MADDriverSettings *DriverInitParam, MADLibrary *lib, MADD
 		return theErr;
 	}
 	
-	for (i = 0; i < MAXTRACK; i++)
+	for (i = 0; i < MAXTRACK; i++) {
 		MDriver->base.Active[i] = true;
-	
+		MDriver->base.trackActivity[i] = 0;
+	}
+
 	MDriver->DriverSettings		= *DriverInitParam;
 	MDriver->base.musicEnd		= false;
 	MDriver->base.Reading		= false;

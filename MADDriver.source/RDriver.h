@@ -636,6 +636,10 @@ typedef struct MADDriverBase {
 	bool		Reading;
 	/// Is the channel active?
 	bool		Active[MAXTRACK];
+	/// Per-track activity snapshot (0-64) for a Mixer-style VU meter --
+	/// the gain DoVolPanning256 already computes per channel per mix tick,
+	/// not a true post-mix RMS level. See DoVolPanning256 (Interrupt.c).
+	short		trackActivity[MAXTRACK];
 	/// Is the equalizer active?
 	bool		Equalizer;
 	

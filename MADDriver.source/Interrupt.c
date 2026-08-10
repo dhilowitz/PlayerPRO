@@ -123,8 +123,10 @@ int DoVolPanning256(short whichChannel, MADChannel *ch, MADDriverRec *intDriver,
 	
 	temp = ((float) ch->vol * (float)volEnv * (float)volFade) /((float)(16*32767));
 	
-	if (!intDriver->base.Active[ch->TrackID])
+	if (!intDriver->base.Active[ch->TrackID]) {
+		intDriver->base.trackActivity[ch->TrackID] = 0;
 		return 0;
+	}
 	
 	if (intDriver->base.curMusic != NULL)
 		temp = (temp * intDriver->base.curMusic->header->chanVol[ch->TrackID]) / MAX_VOLUME;
@@ -156,9 +158,23 @@ int DoVolPanning256(short whichChannel, MADChannel *ch, MADDriverRec *intDriver,
 	}
 	
 	// Vol Global
-	
+
 	temp = (temp * intDriver->base.VolGlobal) / (MAX_VOLUME + 40);	// ICI !!! + 30);
-	
+
+	// Mixer activity meter: temp's own natural range at this point is
+	// roughly 0-40000 (ch->vol(0-64) * volEnv(0-16384) * volFade(0-32767) /
+	// (16*32767), then scaled again by panning and VolGlobal above) -- far
+	// too wide to store directly in a 0-64-range short matching chanVol's
+	// scale, and would overflow a short outright. 630 is that empirical
+	// ceiling divided by 64, so this scales temp down to roughly the same
+	// 0-64 range PPDriver.h documents for -activityAtTrackIndex:.
+	{
+		short scaledActivity = (short)(temp / 630);
+		if (scaledActivity < 0) scaledActivity = 0;
+		if (scaledActivity > 64) scaledActivity = 64;
+		intDriver->base.trackActivity[ch->TrackID] = scaledActivity;
+	}
+
 	return temp;
 }
 

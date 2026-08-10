@@ -593,8 +593,62 @@
 	// was Release-configured, where NSParameterAssert compiles out.
 	NSParameterAssert(idx >= 0 && idx <= 255);
 	MADDriverBase *drivBase = GetDriverBase();
-	
+
 	drivBase->Active[idx] = enabled;
+}
+
+- (short)volumeAtTrackIndex:(NSInteger)idx
+{
+	NSParameterAssert(idx >= 0 && idx <= 255);
+	MADDriverBase *drivBase = GetDriverBase();
+	if (!drivBase->curMusic) {
+		return 0;
+	}
+
+	return drivBase->curMusic->header->chanVol[idx];
+}
+
+- (void)setVolume:(short)volume atTrackIndex:(NSInteger)idx
+{
+	NSParameterAssert(idx >= 0 && idx <= 255);
+	NSParameterAssert(volume >= 0 && volume <= 64);
+	MADDriverBase *drivBase = GetDriverBase();
+	if (!drivBase->curMusic) {
+		return;
+	}
+
+	drivBase->curMusic->header->chanVol[idx] = volume;
+}
+
+- (short)panAtTrackIndex:(NSInteger)idx
+{
+	NSParameterAssert(idx >= 0 && idx <= 255);
+	MADDriverBase *drivBase = GetDriverBase();
+	if (!drivBase->curMusic) {
+		return 0;
+	}
+
+	return drivBase->curMusic->header->chanPan[idx];
+}
+
+- (void)setPan:(short)pan atTrackIndex:(NSInteger)idx
+{
+	NSParameterAssert(idx >= 0 && idx <= 255);
+	NSParameterAssert(pan >= 0 && pan <= 64);
+	MADDriverBase *drivBase = GetDriverBase();
+	if (!drivBase->curMusic) {
+		return;
+	}
+
+	drivBase->curMusic->header->chanPan[idx] = pan;
+}
+
+- (short)activityAtTrackIndex:(NSInteger)idx
+{
+	NSParameterAssert(idx >= 0 && idx <= 255);
+	MADDriverBase *drivBase = GetDriverBase();
+
+	return drivBase->trackActivity[idx];
 }
 
 @end
