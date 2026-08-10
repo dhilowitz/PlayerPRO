@@ -369,6 +369,9 @@
                             </menuItem>
                             <menuItem title="Patterns List" id="1009">
                                 <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showPatternBrowser:" target="-1" id="ppk-p1-brw"/>
+                                </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1008"/>
                             <menuItem title="Create New Pattern" id="1007">
