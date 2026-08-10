@@ -26,6 +26,8 @@ import AudioToolbox
 	var pianoWindow: PianoWindowController?
 	// Same lazy-creation reasoning as pianoWindow.
 	var patternListWindow: PatternListWindowController?
+	// Same lazy-creation reasoning as pianoWindow.
+	var mixerWindow: MixerWindowController?
 
 	// One editor window per (instrument, sample) slot, matching the legacy
 	// app's one-DialogPtr-per-slot behavior, so several can be open at once.
@@ -214,6 +216,25 @@ import AudioToolbox
 
 	@IBAction func showPatternList(_ sender: AnyObject!) {
 		showPatternList()
+	}
+
+	/// Shows this document's Mixer window, creating it on first use.
+	func showMixer() {
+		let mixer: MixerWindowController
+		if let existing = mixerWindow {
+			mixer = existing
+		} else {
+			mixer = MixerWindowController()
+			mixer.currentDocument = self
+			mixerWindow = mixer
+			addWindowController(mixer)
+		}
+		mixer.showWindow(self)
+		mixer.window?.makeKeyAndOrderFront(self)
+	}
+
+	@IBAction func showMixer(_ sender: AnyObject!) {
+		showMixer()
 	}
 
 	/// Shows the waveform editor for a specific (instrument, sample) slot,

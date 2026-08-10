@@ -276,6 +276,11 @@
                                     <action selector="showPiano:" target="-1" id="ppk-p1-ano"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Mixer" keyEquivalent="b" id="ppk-mixr-item">
+                                <connections>
+                                    <action selector="showMixer:" target="-1" id="ppk-mixr-act"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
