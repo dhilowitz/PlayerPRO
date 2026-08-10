@@ -28,6 +28,8 @@ import AudioToolbox
 	var partitionListWindow: PartitionListWindowController?
 	// Same lazy-creation reasoning as pianoWindow.
 	var mixerWindow: MixerWindowController?
+	// Same lazy-creation reasoning as pianoWindow.
+	var patternBrowserWindow: PatternBrowserWindowController?
 
 	// One editor window per (instrument, sample) slot, matching the legacy
 	// app's one-DialogPtr-per-slot behavior, so several can be open at once.
@@ -237,6 +239,67 @@ import AudioToolbox
 		showMixer()
 	}
 
+	/// Shows this document's pattern browser window (the original's
+	/// "Patterns List" -- see PatternBrowserWindowController), creating it
+	/// on first use.
+	func showPatternBrowser() {
+		let browser: PatternBrowserWindowController
+		if let existing = patternBrowserWindow {
+			browser = existing
+		} else {
+			browser = PatternBrowserWindowController()
+			browser.currentDocument = self
+			patternBrowserWindow = browser
+			addWindowController(browser)
+		}
+		browser.reload()
+		browser.showWindow(self)
+		browser.window?.makeKeyAndOrderFront(self)
+	}
+
+	@IBAction func showPatternBrowser(_ sender: AnyObject!) {
+		showPatternBrowser()
+	}
+
+	/// Removes the pattern at index (PatternBrowserWindowController's
+	/// Delete button) and keeps every dependent piece of state consistent:
+	/// the order list (whose pointers -removePattern(at:) already fixed up
+	/// at the model layer), this document's own notion of which pattern is
+	/// "current", and the live engine's attached copy of the song.
+	func deletePattern(at index: Int) {
+		guard let music = theMusic, music.removePattern(at: index) else {
+			NSSound.beep()   // refused: this was the song's last pattern
+			return
+		}
+
+		// -currentPatternID is an index into -patterns, same as every
+		// order-list pointer -removePattern(at:) already fixed up above --
+		// apply the identical rule here so it doesn't end up pointing at
+		// the wrong pattern (if it was after the gap) or a pattern that no
+		// longer exists (if it was the one just removed).
+		if currentPatternID == index {
+			currentPatternID = 0
+		} else if currentPatternID > index {
+			currentPatternID -= 1
+		}
+
+		// The engine may be mid-playback holding a pointer into the raw
+		// partition[] slot that -removePattern(at:) just freed and shifted
+		// -- re-running the attach step is this port's equivalent of the
+		// original's pause-mutate-MADReset-resume dance around the same
+		// operation (DeleteAPattern, Files/Pattern.c). Simplest safe choice
+		// here is to just leave playback paused rather than guess whether
+		// resuming mid-pattern is still meaningful after the shift.
+		if theDriver.isPlayingMusic {
+			_ = try? theDriver.pause()
+		}
+		_ = try? theDriver.reattachCurrentMusic()
+
+		updateChangeCount(.changeDone)
+		partitionListWindow?.reload()
+		patternBrowserWindow?.reload()
+	}
+
 	/// Shows the waveform editor for a specific (instrument, sample) slot,
 	/// creating it on first use. Reached by double-clicking a sample row in
 	/// the Instrument Panel, or the toolbar's "Waveform" button.
@@ -277,6 +340,7 @@ import AudioToolbox
 		updateChangeCount(.changeDone)
 		currentPatternID = newPattern.index
 		partitionListWindow?.reload()
+		patternBrowserWindow?.reload()
 	}
 
 	@IBAction func createNewPattern(_ sender: AnyObject!) {
