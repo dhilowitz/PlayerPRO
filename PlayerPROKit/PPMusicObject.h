@@ -136,6 +136,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// used.
 - (nullable PPPatternObject *)addPattern;
 
+/// Removes the pattern at index, matching the original's DeleteAPattern
+/// (Files/Pattern.c) exactly: every later pattern shifts down one slot, and
+/// every order-list position that referenced it is fixed up (positions
+/// pointing past it decrement by one; positions pointing AT it fall back to
+/// pattern 0, rather than being left dangling). Refuses -- leaving the
+/// model unchanged -- if this is the song's last remaining pattern, since a
+/// song must always have at least one to play.
+/// @return NO if refused (last pattern) or index is out of range.
+- (BOOL)removePatternAtIndex:(NSInteger)index NS_SWIFT_NAME(removePattern(at:));
+
 @end
 
 NS_ASSUME_NONNULL_END

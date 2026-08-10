@@ -654,4 +654,9 @@ static Cmd *GetMADCommandFromPatternObj(short PosX, short TrackIdX, PPPatternObj
 	return NO;
 }
 
+- (void)pp_reindexTo:(NSInteger)newIndex
+{
+	index = newIndex;
+}
+
 @end

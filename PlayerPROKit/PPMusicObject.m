@@ -1058,6 +1058,65 @@ static MADMusic *DeepCopyMusic(MADMusic* oldMus)
 	return newObj;
 }
 
+- (BOOL)removePatternAtIndex:(NSInteger)index
+{
+	if (!currentMusic || index < 0 || index >= currentMusic->header->numPat) {
+		return NO;
+	}
+	if (currentMusic->header->numPat <= 1) {
+		// A song must always have at least one pattern to play -- matches
+		// the original's own refusal (DeleteAPattern, Files/Pattern.c)
+		// rather than leaving a document with zero patterns.
+		return NO;
+	}
+
+	// Force -patterns to have been built before mutating the raw array
+	// below, same reasoning as -addPattern.
+	[self patterns];
+
+	free(currentMusic->partition[index]);
+	short numPat = currentMusic->header->numPat;
+	for (short i = (short)index; i < numPat - 1; i++) {
+		currentMusic->partition[i] = currentMusic->partition[i + 1];
+	}
+	currentMusic->partition[numPat - 1] = NULL;
+	currentMusic->header->numPat--;
+
+	// Every order-list position that pointed past the removed pattern
+	// shifts down with it; anything that pointed AT the removed pattern
+	// falls back to pattern 0, matching the original exactly (Pattern.c's
+	// DeleteAPattern) rather than leaving a dangling reference into a slot
+	// that no longer holds what it used to.
+	for (short i = 0; i < MAXPOINTER; i++) {
+		if (currentMusic->header->oPointers[i] > index) {
+			currentMusic->header->oPointers[i]--;
+		} else if (currentMusic->header->oPointers[i] == index) {
+			currentMusic->header->oPointers[i] = 0;
+		}
+	}
+
+	NSIndexSet *removedIndex = [NSIndexSet indexSetWithIndex:index];
+	[self willChange:NSKeyValueChangeRemoval valuesAtIndexes:removedIndex forKey:@"patterns"];
+	[_patterns removeObjectAtIndex:index];
+	// Every remaining pattern after the gap shifted down a slot in
+	// partition[] above; -index doesn't follow along on its own (it's a
+	// stored property, not derived from array position), so it has to be
+	// corrected by hand or every PPPatternObject after the gap would keep
+	// pointing one slot too high.
+	for (NSInteger i = index; i < (NSInteger)_patterns.count; i++) {
+		[_patterns[i] pp_reindexTo:i];
+	}
+	[self didChange:NSKeyValueChangeRemoval valuesAtIndexes:removedIndex forKey:@"patterns"];
+
+	// Deliberately not setting currentMusic->hasChanged or touching
+	// playback state here -- same UI-layer-owns-that split as -addPattern.
+	// (The original pauses/resumes MADDriver->Reading around this same
+	// mutation and calls MADReset after; this port's equivalent safety
+	// step -- pausing playback and calling -reattachCurrentMusic -- is the
+	// caller's job, same as every other structural mutation in this file.)
+	return YES;
+}
+
 - (NSInteger)lengthOfPartitions
 {
 	return currentMusic->header->numPointers;

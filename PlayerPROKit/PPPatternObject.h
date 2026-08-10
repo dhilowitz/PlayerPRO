@@ -37,6 +37,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)modifyCommandAtPosition:(short)PosX channel:(short)TrackIdX commandBlock:(void (NS_NOESCAPE^)(Cmd *))block;
 - (void)modifyCommandAtPosition:(short)PosX channel:(short)TrackIdX madCommandBlock:(void (NS_NOESCAPE^)(PPMadCommandObject*))block;
 
+// SPI for PPMusicObject only: -index is a stored property, not computed
+// from this object's position in -patterns, so removing an earlier pattern
+// (-[PPMusicObject removePatternAtIndex:]) has to correct every later
+// pattern's -index by hand to keep matching its new, shifted slot in
+// partition[].
+- (void)pp_reindexTo:(NSInteger)newIndex;
+
 @end
 
 NS_ASSUME_NONNULL_END
