@@ -33,3 +33,13 @@ PIANO-KEYBOARD-SPEC.md
 PATTERN-LIST-SPEC.md
 MIXER-COMPARISON.md
 mixer-comparison-screenshots/
+
+# Local-only assets carried over from the other PlayerPro directory --
+# test files and reference notes, not part of the project itself.
+MADK Files/
+local-notes/
+
+# Local build/sign/notarize scripts and their output -- never committed,
+# per project instruction (the process itself, and any credentials it
+# touches, stay off GitHub entirely).
+release/
